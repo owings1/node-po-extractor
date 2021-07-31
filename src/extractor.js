@@ -325,6 +325,10 @@ class Extractor extends EventEmitter {
     }
 
     /**
+     * Inspired by:
+     *
+     *    https://github.com/oliviertassinari/i18n-extract/blob/9110ba513/src/mergeMessagesWithPO.js
+     *
      * @private
      *
      * @throws {ArgumentError}
