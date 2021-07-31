@@ -265,8 +265,7 @@ class Extractor extends EventEmitter {
         )
         file = resolveSafe(this.opts.baseDir, file)
         this._checkGitDirty(file)
-        this.logger.warn('not writing yet...')
-        //fs.writeFileSync(file, content)
+        fs.writeFileSync(file, content)
     }
 
     /**
