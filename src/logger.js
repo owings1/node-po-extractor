@@ -136,10 +136,20 @@ Defaults.format = function (level, args) {
 class Logger {
 
     constructor(opts) {
+        opts = opts || {}
         this.opts = {...Defaults, ...opts}
         LevelNames.forEach(name =>
             this[name] = this.level.bind(this, name)
         )
+        if (opts.chalks) {
+            // Ensure all chalks are set.
+            Object.entries(Defaults.chalks).forEach(([key, value]) => {
+                if (typeof value != 'object') {
+                    return
+                }
+                this.opts.chalks[key] = {...value, ...opts.chalks[key]}
+            })
+        }
     }
 
     level(level, ...args) {

@@ -63,11 +63,11 @@ const {EventEmitter} = require('events')
 const Defaults = {
     baseDir    : '.',
     context    : '',
-    forceSave  : false,
-    // {boolean|string('trackedOnly')}
-    gitCheck   : true,
     replace    : false,
+    gitCheck   : true,
+    // {boolean|string('trackedOnly')}
     sort       : 'source',
+    forceSave  : false,
     verbosity  : 0,
     references: {
         enabled    : true,
@@ -76,6 +76,7 @@ const Defaults = {
         perLine    : -1,
         lineLength : 120,
     },
+    //logger:
     logging: {},
 }
 
