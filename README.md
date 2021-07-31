@@ -223,26 +223,24 @@ const opts = {
 ### Events
 
 - `added` - When a new message is found. Receieves arguments:
-  - `tran`: The new translation object being added to the po.
-  - `message:` The message object extracted from source.
+    - `tran`: The new translation object being added to the po.
+    - `message:` The message object extracted from source.
 
 - `found` - When a translation exists for a message. Receives:
-  - `tran`: The existing translation object.
-  - `message`: The message object.
+    - `tran`: The existing translation object.
+    - `message`: The message object.
 
-- `changed` - When an existing translation has been modified. Currently the
-  only case for this is when comments are being updated. Receieves:
-  - `tran`: The existing translation object.
-  - `message`: The message object.
-  - `changes`: An array of change info objects
+- `changed` - When an existing translation has been modified. Currently the only case for this is when comments are being updated. Receieves:
+    - `tran`: The existing translation object.
+    - `message`: The message object.
+    - `changes`: An array of change info objects
 
-- `missing` - When no message was extracted for a translation that exists in
-  the po file. Receives:
-  - `tran`: The translation object.
+- `missing` - When no message was extracted for a translation that exists in the po file. Receives:
+    - `tran`: The translation object.
 
 - `beforeSave` - Before a file is written. Receives:
-  - `file`: The file being written.
-  - `content`: The buffer being written.
+    - `file`: The file being written.
+    - `content`: The buffer being written.
 
 -------------
 
