@@ -14,5 +14,4 @@ pipelines:
               - node
             script:
               - npm install
-              - npm run compile
               - FORCE_COLOR=2 npm test
