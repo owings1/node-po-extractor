@@ -46,7 +46,7 @@ Extract and merge:
 const opts = {}
 const extractor = new Extractor(opts)
 const merger = new Merger(opts)
-const messages = extractor.extract('locale/en/messages.po', 'src/**/*.js')
+const messages = extractor.extract('src/**/*.js')
 merger.mergePo('locale/en/messages.po', messages)
 ```
 
@@ -345,7 +345,7 @@ The result object is of the form:
 - [@babel/traverse](https://www.npmjs.com/package/@babel/traverse)
 - [chalk](https://www.npmjs.com/package/chalk)
 - [gettext-parser](https://www.npmjs.com/package/gettext-parser)
-- [glob](https://www.npmjs.com/package/glob)
+- [globby](https://www.npmjs.com/package/globby)
 - [i18n-extract](https://www.npmjs.com/package/i18n-extract)
 
 

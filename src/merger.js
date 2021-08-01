@@ -426,7 +426,7 @@ class Merger extends Base {
             }
             built.push(ref)
         }
-        return this._buildReferenceLines(built)
+        return this._buildReferenceLines(built).join('\n')
     }
 
     /**
@@ -458,7 +458,7 @@ class Merger extends Base {
         if (line) {
             lines.push(line)
         }
-        return lines.join('\n')
+        return lines
     }
 
     /**
