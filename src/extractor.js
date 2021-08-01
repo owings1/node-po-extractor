@@ -24,7 +24,8 @@
  */
 
 // Dependency requires
-const globb = require('globby')
+const chalk = require('chalk')
+const globby = require('globby')
 const I18nExtract = require('i18n-extract')
 
 // Node requires
@@ -38,6 +39,8 @@ const {
     castToArray,
     checkArg,
     //isFunction,
+    lget,
+    lset,
     locHash,
     locToObject,
     relPath,
@@ -49,6 +52,13 @@ const {
 // Default options.
 const Defaults = {
     marker: '__',
+    logging: {
+        chalks: {
+            info: {
+                prefix: chalk.green,
+            },
+        },
+    },
 }
 
 class Extractor extends Base {
@@ -59,8 +69,7 @@ class Extractor extends Base {
      * @param {object} (optional) The options
      */
     constructor(opts) {
-        opts = {...Defaults, ...opts}
-        super(opts)
+        super(Defaults, opts)
     }
 
    /**
@@ -79,7 +88,11 @@ class Extractor extends Base {
         checkArg(globs, 'globs', it => (
             Boolean(it.length) || 'Argument (globs) cannot be empty'
         ))
-        const extracted = I18nExtract.extractFromFiles(globs, opts)
+        const files = globby.sync(globs)
+        this.logger.info(
+            'Extracting messages from', files.length, 'files'
+        )
+        const extracted = I18nExtract.extractFromFiles(files, opts)
         extracted.forEach(message => this._extendExtracted(message))
         return this._collate(extracted)
     }
@@ -175,7 +188,6 @@ class Extractor extends Base {
         })
         return index
     }
-
 }
 
 module.exports = Extractor

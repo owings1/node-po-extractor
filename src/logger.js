@@ -23,7 +23,14 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 const chalk = require('chalk')
-const {castToArray, isFunction, parseStack} = require('./util')
+
+const {
+    castToArray,
+    isFunction,
+    isPlainObject,
+    mergePlain,
+    parseStack,
+} = require('./util')
 
 const LevelNums = {
     error : 0,
@@ -116,7 +123,7 @@ Defaults.format = function (level, args) {
             hasError = true
             return this.formatError(arg, args.some(arg => arg && arg.throwing))
         }
-        if (typeof arg == 'object') {
+        if (isPlainObject(arg)) {
             const entries = Object.entries(arg)
             if (entries.length == 1) {
                 const [key, value] = entries[0]
@@ -132,24 +139,13 @@ Defaults.format = function (level, args) {
     }).filter(arg => arg != null)
 }
 
-
 class Logger {
 
     constructor(opts) {
-        opts = opts || {}
-        this.opts = {...Defaults, ...opts}
+        this.opts = mergePlain(Defaults, opts)
         LevelNames.forEach(name =>
             this[name] = this.level.bind(this, name)
         )
-        if (opts.chalks) {
-            // Ensure all chalks are set.
-            Object.entries(Defaults.chalks).forEach(([key, value]) => {
-                if (typeof value != 'object') {
-                    return
-                }
-                this.opts.chalks[key] = {...value, ...opts.chalks[key]}
-            })
-        }
     }
 
     level(level, ...args) {
