@@ -34,54 +34,25 @@ Install:
 npm install --save-dev owings1/node-po-extractor
 ```
 
-Construct:
+Import:
 
 ```javascript
-const Extractor = require('po-extractor')
-const opts = {}
-const extractor = new Extractor(opts)
+const {Extractor, Merger} = require('po-extractor')
 ```
 
 Extract and merge:
 
 ```javascript
+const opts = {}
+const extractor = new Extractor(opts)
+const merger = new Merger(opts)
 const messages = extractor.extract('locale/en/messages.po', 'src/**/*.js')
-extractor.mergePo('locale/en/messages.po', messages)
+merger.mergePo('locale/en/messages.po', messages)
 ```
 
 ## Options
 
-### Base options
-
--------------
-
-#### `context` (*string*)
-
-**Default**: `''`
-
-The message context, `''` is the default context.
-
--------------
-
-#### `replace` (*boolean*)
-
-**Default**: `false`
-
-Whether to remove translations from the po file that are not found in the
-extracted messages. The default is to keep the messages.
-
--------------
-
-#### `sort` (*string|function*)
-
-**Default**: `'source'`
-
-How to sort the translations in the po file. The default is to keep the
-same order as the source po file, and to sort new translations by `msgid`.
-Other built-in options are `'msgid'`, and `'file'`. Alternatively, you can
-supply a custom sorting function. See below for details.
-
--------------
+### Common options
 
 #### `baseDir` (*string*)
 
@@ -93,87 +64,11 @@ script, for example with `npm run ...`, this is typically not needed.
 
 -------------
 
-#### `gitCheck` (*boolean|string*)
+#### `context` (*string*)
 
-**Default**: `true`
+**Default**: `''`
 
-Whether to check for uncommitted or untracked changes in git before
-writing to a file. Note that this will not check files that are ignored by
-a `.gitignore` file. If set to the string `'trackedOnly'`, it only consider
-a file if it is already tracked in git.
-
-If you are not writing to a git repository, or you do not have git
-installed, you must set this to `false`.
-
--------------
-
-### Reference options
-
-An example of a reference comment is:
-
-```
-#: src/app.js:302
-msgid "Unknown system error"
-msgstr "Error desconegut del sistema"
-```
-
-See [this page for more details](https://www.gnu.org/software/gettext/manual/html_node/PO-Files.html).
-
-Reference options are passed in a `references` section, like this:
-
-```javascript
-const opts = {
-  references: {
-    enabled: true,
-    //...
-  }
-}
-```
-
--------------
-
-#### `references.enabled` (*boolean*)
-
-**Default**: `true`
-
-Whether to add line reference comments.
-
--------------
-
-#### `references.max` (*integer*)
-
-**Default**: `-1`
-
-Max references to store per translation. A negative value means no limit.
-
--------------
-
-#### `references.perFile` (*integer*)
-
-**Default**: `-1`
-
-Max references per file for a single translation.
-
--------------
-
-#### `references.perLine` (*integer*)
-
-**Default**: `-1`
-
- Max references per comment line.
-
--------------
-
-#### `references.lineLength` (*integer*)
-
-**Default**: `120`
-
-Length at which to start a new comment line. If a single reference exceeds
-this value, it will still be added.
-
--------------
-
-### Logging options
+The message context, `''` is the default context.
 
 -------------
 
@@ -218,9 +113,98 @@ const opts = {
 }
 ```
 
+### Extractor options
+
+#### `marker` (*string*)
+
+**Default**: `'__'`
+
+The symbol for the i18n translate method to extract messages from source.
+
 -------------
 
-### Events
+### Merger options
+
+#### `replace` (*boolean*)
+
+**Default**: `false`
+
+Whether to remove translations from the po file that are not found in the
+extracted messages. The default is to keep the messages.
+
+-------------
+
+#### `sort` (*string|function*)
+
+**Default**: `'source'`
+
+How to sort the translations in the po file. The default is to keep the
+same order as the source po file, and to sort new translations by `msgid`.
+Other built-in options are `'msgid'`, and `'file'`. Alternatively, you can
+supply a custom sorting function. See below for details.
+
+-------------
+
+#### `gitCheck` (*boolean|string*)
+
+**Default**: `true`
+
+Whether to check for uncommitted or untracked changes in git before
+writing to a file. Note that this will not check files that are ignored by
+a `.gitignore` file. If set to the string `'trackedOnly'`, it only consider
+a file if it is already tracked in git.
+
+If you are not writing to a git repository, or you do not have git
+installed, you must set this to `false`.
+
+-------------
+
+#### `dryRun` (*boolean*)
+
+**Default**: `false`
+
+Do everything but write files.
+
+-------------
+
+#### `refererences` (*object*)
+
+Options for generating reference comments. These options are passed in like this:
+
+**Defaults**:
+
+```javascript
+const opts = {
+  references: {
+    enabled: true,
+    max: -1,
+    perFile: -1,
+    perLine: -1,
+    lineLength: 120,
+  }
+}
+```
+
+- `enabled` (*boolean*) Whether to add line reference comments.
+- `max` (*integer*) Max references to store per translation. A negative value means no limit.
+- `perFile` (*integer*) Max references per file for a single translation.
+- `perLine` (*integer*) Max references per comment line.
+- `lineLength` (*integer*) Length at which to start a new comment line. If a single reference exceeds this value, it will still be added.
+
+An example of a reference comment is:
+
+```
+ #: src/app.js:302
+ msgid "Unknown system error"
+ msgstr "Error desconegut del sistema"
+```
+
+See [this page for more details](https://www.gnu.org/software/gettext/manual/html_node/PO-Files.html).
+
+
+-------------
+
+### Merger Events
 
 - `added` - When a new message is found. Receieves arguments:
     - `tran`: The new translation object being added to the po.
@@ -254,7 +238,7 @@ Forthcoming...
 
 -------------
 
-### `extract(globs)`
+### `extractor.extract(globs)`
 
 Extract messages from source files.
 
@@ -271,7 +255,7 @@ See: https://github.com/oliviertassinari/i18n-extract
 
 -------------
 
-### `mergePo(file, messages)`
+### `merger.mergePo(file, messages)`
 
 Update a po file with the extracted messages.
 
@@ -290,7 +274,7 @@ Update a po file with the extracted messages.
 
 -------------
 
-### `mergePoTo(sourceFile, destFile, messages)`
+### `merger.mergePoTo(sourceFile, destFile, messages)`
 
 Update a po file with the extracted messages.
 
@@ -310,7 +294,7 @@ Update a po file with the extracted messages.
 
 -------------
 
-### `getMergePoResult(sourceFile, messages)`
+### `merger.getMergePoResult(sourceFile, messages)`
 
 Get the result object for merging a po file.
 

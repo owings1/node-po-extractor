@@ -170,7 +170,7 @@ class Util {
         const files = output.trim().split('\n')
             .map(line => line.split('\t')[1])
             .filter(Boolean)
-        console.log({files})
+        //console.log({cmd, args, opts, files})
         return files.some(file => file.includes(basename))
     }
 
