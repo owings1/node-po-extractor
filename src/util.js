@@ -95,7 +95,11 @@ const deepmerge = require('deepmerge')
 const child_process = require('child_process')
 const path = require('path')
 
-const {ArgumentError} = require('./errors')
+const {
+    ArgumentError,
+    ExecExitError,
+    ExecResultError,
+} = require('./errors')
 
 class Util {
 
@@ -184,50 +188,62 @@ class Util {
         return Util.isFunction(thing) ? thing(...args) : thing
     }
 
+    static gitFileStatus(file) {
+        const basename = path.basename(file)
+        const cmd = 'git'
+        const args = ['status', '--porcelain=v1', '--', basename]
+        const opts = {cwd: path.dirname(file)}
+        let result
+        try {
+            result = Util.exec(cmd, args, opts)
+        } catch (error) {
+            result = {error}
+        }
+        if (result.error) {
+            const err = new ExecResultError(
+                result.error.message || `Failed to execute git command`,
+                result.error,
+            )
+            err.code = result.error.code
+            throw err
+        }
+        if (result.status != 0) {
+            const err = new ExecExitError(
+                `Git exited with status code ${result.status}`
+            )
+            const {status, signal, pid, stderr} = result
+            Util.update(err, {
+                status,
+                signal,
+                pid,
+                stderr: stderr.toString('utf-8'),
+            })
+            throw err
+        }
+        const output = result.stdout.toString('utf-8')
+        const lines = output.split('\n')
+        let fileStatus = 'clean'
+        for (let i = 0; i < lines.length; ++i) {
+            const line = lines[i]
+            const attr = line.substring(0, 2)
+            if (!line.toLowerCase().includes(basename.toLowerCase())) {
+                continue
+            }
+            if (attr.includes('?')) {
+                fileStatus = 'untracked'
+            } else if (attr == 'M ') {
+                fileStatus = 'staged'
+            } else {
+                // default catch-all
+                fileStatus = 'modified'
+            }
+            break
+        }
+        return {fileStatus, result}
+    }
+
     static isFunction(arg) {
         return typeof arg == 'function'
-    }
-
-    static isGitDirty(file) {
-        const basename = path.basename(file)
-        const cmd = 'git'
-        const args = ['diff-index', 'HEAD', '--', basename]
-        /*
-        const args = ['status', '--porcelain', '--', basename]
-         - first one is staged
-         - second one is unstaged
-         - third one is untracked
-         - empty output for clean
-         - always shows full path relative to base dir
-        M  doc/events.md
-         M scripts/extract.js
-        ?? scripts/foo
-        */
-        const opts = {cwd: path.dirname(file), env: {FORCE_COLOR: '0'}}
-        const result = Util.exec(cmd, args, opts)
-        if (result.status != 0) {
-            return result
-        }
-        const output = result.stdout.toString('utf-8')
-        const files = output.trim().split('\n')
-            .map(line => line.split('\t')[1])
-            .filter(Boolean)
-        //console.log({cmd, args, opts, files})
-        return files.some(file => file.includes(basename))
-    }
-
-    static isGitUntracked(file) {
-        const basename = path.basename(file)
-        const cmd = 'git'
-        const args = ['ls-files', '--other', '--exclude-standard', '--', basename]
-        const opts = {cwd: path.dirname(file), env: {FORCE_COLOR: '0'}}
-        const result = Util.exec(cmd, args, opts)
-        if (result.status != 0) {
-            return result
-        }
-        const output = result.stdout.toString('utf-8')
-        const files = output.trim().split('\n').filter(Boolean)
-        return files.some(file => file.includes(basename))
     }
 
     /**
@@ -416,6 +432,22 @@ class Util {
             return 'object'
         }
         return typeof arg
+    }
+
+    /**
+     * Update an object with new values.
+     *
+     * @param {object} The target object to update
+     * @param {object} The source object with the new values
+     * @return {object} The target object
+     */
+    static update(target, source) {
+        target = target || {}
+        source = source || {}
+        Object.entries(source).forEach(([key, value]) => {
+            target[key] = value
+        })
+        return target
     }
 }
 

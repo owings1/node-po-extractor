@@ -145,14 +145,13 @@ supply a custom sorting function. See below for details.
 
 -------------
 
-#### `gitCheck` (*boolean|string*)
+#### `gitCheck` (*boolean*)
 
 **Default**: `true`
 
-Whether to check for uncommitted or untracked changes in git before
+Whether to check for uncommitted changes in git before
 writing to a file. Note that this will not check files that are ignored by
-a `.gitignore` file. If set to the string `'trackedOnly'`, it only consider
-a file if it is already tracked in git.
+a `.gitignore` file.
 
 If you are not writing to a git repository, or you do not have git
 installed, you must set this to `false`.
@@ -266,8 +265,9 @@ Update a po file with the extracted messages.
  * @return {object} The merge info result
  *
  * @throws {ArgumentError}
- * @throws {GitExecFailedError}
- * @throws {GitCheckError}
+ * @throws {ExecExitError}
+ * @throws {ExecResultError}
+ * @throws {UnsavedChangesError}
  * @emits `beforeSave`
  */
 ```
@@ -286,8 +286,9 @@ Update a po file with the extracted messages.
  * @return {object} The merge info result
  * 
  * @throws {ArgumentError}
- * @throws {GitExecFailedError}
- * @throws {GitCheckError}
+ * @throws {ExecExitError}
+ * @throws {ExecResultError}
+ * @throws {UnsavedChangesError}
  * @emits `beforeSave`
  */
 ```

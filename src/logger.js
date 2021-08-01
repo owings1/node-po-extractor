@@ -76,7 +76,7 @@ Defaults.chalks = {
         string  : chalk.hex('#884444'),
         file    : chalk.yellow,
         name    : chalk.bgRedBright.bold.black,
-        message : chalk.underline.bold.hex('#884444'),
+        message : chalk.bold.hex('#884444'),
         stack   : chalk.grey,
     },
     warn: {

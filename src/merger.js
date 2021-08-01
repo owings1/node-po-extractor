@@ -38,9 +38,8 @@ const {
     castToArray,
     checkArg,
     checkMax,
+    gitFileStatus,
     isFunction,
-    isGitDirty,
-    isGitUntracked,
     lget,
     lset,
     relPath,
@@ -50,9 +49,8 @@ const {
 
 const {
     DuplicateKeyError,
-    GitCheckError,
-    GitExecFailedError,
     MissingContextError,
+    UnsavedChangesError,
 } = require('./errors')
 
 // Default options.
@@ -96,8 +94,9 @@ class Merger extends Base {
      * Update a po file with the extracted messages.
      *
      * @throws {ArgumentError}
-     * @throws {GitExecFailedError}
-     * @throws {GitCheckError}
+     * @throws {ExecExitError}
+     * @throws {ExecResultError}
+     * @throws {UnsavedChangesError}
      *
      * @emits `beforeSave`
      *
@@ -129,8 +128,9 @@ class Merger extends Base {
      * Update a po file with the extracted messages.
      *
      * @throws {ArgumentError}
-     * @throws {GitExecFailedError}
-     * @throws {GitCheckError}
+     * @throws {ExecExitError}
+     * @throws {ExecResultError}
+     * @throws {UnsavedChangesError}
      *
      * @emits `beforeSave`
      *
@@ -184,8 +184,9 @@ class Merger extends Base {
      * Write to a file.
      *
      * @throws {ArgumentError}
-     * @throws {GitExecFailedError}
-     * @throws {GitCheckError}
+     * @throws {ExecExitError}
+     * @throws {ExecResultError}
+     * @throws {UnsavedChangesError}
      *
      * @param {string} The file path
      * @param {buffer} The content to write
@@ -499,77 +500,50 @@ class Merger extends Base {
     /**
      * @private
      *
-     * @throws {GitExecFailedError}
-     * @throws {GitCheckError}
+     * @throws {ExecExitError}
+     * @throws {ExecResultError}
+     * @throws {UnsavedChangesError}
      *
      * @param {string} The file path
      * @return {undefined}
      */
     _checkGitDirty(file) {
-        const {logger} = this
+        const log = this.logger
         const {baseDir, gitCheck} = this.opts
-        this.verbose(1, 'gitCheck', {gitCheck})
+        const rel = relPath(baseDir, file)
+        this.verbose(1, 'gitCheck', {gitCheck}, {file: rel})
+        file = resolveSafe(baseDir, file)
         if (!gitCheck) {
             return
         }
-        file = resolveSafe(baseDir, file)
-        const trackedOpt = 'trackedOnly'
-        const fmsg = {
-            pre: 'Git execution failed with',
-            dis: 'Use option {gitCheck: false} to disable this check',
-        }
-        let isTracked = true
-        let fixval = false
-        let result
+        let fileStatus
         try {
-            result = isGitDirty(file)
-            //console.log({result})
-            if (result === false) {
-                if (gitCheck != trackedOpt) {
-                    result = isGitUntracked(file)
-                    if (result === false) {
-                        return
-                    }
-                    isTracked = false
-                    fixval = trackedOpt
-                } else {
-                    return
-                }
+            fileStatus = gitFileStatus(file).fileStatus
+            if (fileStatus != 'clean') {
+                throw new UnsavedChangesError(
+                    `Refusing to clobber ${fileStatus} changes in git`
+                )
             }
         } catch (err) {
-            const {code} = err
-            logger.debug(err)
-            logger.error(err.message, {code, path: err.path})
-            const emsg = `${fmsg.pre} code ${code}. ${fmsg.dis}.`
-            throw new GitExecFailedError(emsg, err)
-        }
-        if (typeof result == 'object') {
-            for (const buf of [result.stdout, result.stderr]) {
-                try {
-                    const str = buf.toString('utf-8').trim()
-                    if (str) {
-                        logger.error(str)
-                    }
-                } catch (err) {
-                    logger.debug(err)
-                    logger.error(err.name, err.message)
+            log.error(err, {throwing: true})
+            if (err.name == 'ExecResultError') {
+                log.error('Git execution failed with', {code: err.code})
+            } else if (err.name == 'ExecExitError') {
+                const {status, stderr} = err
+                log.error('Git command exited with', {status})
+                if (stderr) {
+                    log.warn('stderr:>>', '\n' + stderr)
+                    log.warn('<<:stderr')
+                    delete err.stderr
                 }
+            } else if (err.name == 'UnsavedChangesError') {
+                log.error('Unsaved changes in git for', {file: rel}, {fileStatus})
+                log.error('Commit, stash, or abandon the changes before continuing')
             }
-            const emsg = `${fmsg.pre} exit code ${result.status}. ${fmsg.dis}.`
-            throw new GitExecFailedError(emsg)
+            log.info('Use option', {gitCheck: false}, 'to ignore this check.')
+            throw err
         }
-        const rel    = relPath(baseDir, file)
-        const word   = isTracked ? 'Dirty' : 'Untracked'
-        const phrase = isTracked ? 'abandon the changes': 'delete the file'
-        const err    = new GitCheckError(`${word} path detected at ${rel}.`)
-        const elogs = [
-            [err, {throwing: true}],
-            ['Changes to', {file: rel}, 'have not been committed.'],
-            [`Commit, stash, or ${phrase} and retry.`],
-            ['Use option', {gitCheck: fixval}, 'to ignore this check.'],
-        ]
-        elogs.forEach(args => logger.error(...args))
-        throw err
+        this.verbose(1, 'gitCheck', {fileStatus})
     }
 }
 

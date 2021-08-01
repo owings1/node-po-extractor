@@ -34,14 +34,16 @@ class BaseError extends Error {
 
 class ArgumentError extends BaseError {}
 class DuplicateKeyError extends BaseError {}
-class GitCheckError extends BaseError {}
-class GitExecFailedError extends BaseError {}
+class ExecExitError extends BaseError {}
+class ExecResultError extends BaseError {}
 class MissingContextError extends BaseError {}
+class UnsavedChangesError extends BaseError {}
 
 module.exports = {
     ArgumentError,
     DuplicateKeyError,
-    GitCheckError,
-    GitExecFailedError,
+    ExecExitError,
+    ExecResultError,
     MissingContextError,
+    UnsavedChangesError,
 }
