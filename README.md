@@ -72,6 +72,19 @@ The message context, `''` is the default context.
 
 -------------
 
+#### `gitCheck` (*boolean*)
+
+**Default**: `true`
+
+Whether to check for uncommitted changes in git before
+writing to a file. Note that this will not check files that are ignored by
+a `.gitignore` file.
+
+If you are not writing to a git repository, or you do not have git
+installed, you must set this to `false`.
+
+-------------
+
 #### `verbosity` (*integer*)
 
 **Default**: `0`
@@ -92,34 +105,34 @@ You can use this to supply a custom logger. It must have the methods: `error`,
 
 #### `logging` (*object*)
 
-You can set other options passed to the default logger in the `logging`
-section, like this:
+- **logLevel** (*string|integer*): The logLevel. A number from 0-4, or a string ('info', 'warn',
+    'error', 'debug'). The environment variables `LOG_LEVEL`, `LOGLEVEL`, and `DEBUG` are also checked.
 
-```javascript
-const opts = {
+- **prefix** (**function**): A custom function to provide the prefix. See [logger.js](src/logger.js).
 
-  logging: {
-
-    // The logLevel. A number from 0-4, or a string ('info', 'warn', etc.).
-    // The environment variable `LOG_LEVEL` is also checked.
-    logLevel: 2,
-
-    // Custom prefix function. See src/logger.js for more details.
-    prefix: function(level) {},
-
-    // Set custom chalk methods for styling. See src/logger.js for more details.
-    chalks: {},
-  }
-}
-```
+- **chalks** (**object**): An object with chalk styes. See [logger.js](src/logger.js).
 
 ### Extractor options
 
-#### `marker` (*string*)
+#### `marker` (*string|array*)
 
-**Default**: `'__'`
+**Default**: `['i18n', '__']`
 
-The symbol for the i18n translate method to extract messages from source.
+The symbol(s) for the i18n translate method to extract messages from source.
+
+-------------
+
+#### `encoding` (*string*)
+
+**Default**: `'utf-8'`
+The default encoding to use when reading source files. Can be overridden for
+individual files.
+
+-------------
+
+#### `parsing` (*object*)
+
+- **parser** (*string* default 'flow'): The babel parser to use, 'typescript' or 'flow'.
 
 -------------
 
@@ -142,19 +155,6 @@ How to sort the translations in the po file. The default is to keep the
 same order as the source po file, and to sort new translations by `msgid`.
 Other built-in options are `'msgid'`, and `'file'`. Alternatively, you can
 supply a custom sorting function. See below for details.
-
--------------
-
-#### `gitCheck` (*boolean*)
-
-**Default**: `true`
-
-Whether to check for uncommitted changes in git before
-writing to a file. Note that this will not check files that are ignored by
-a `.gitignore` file.
-
-If you are not writing to a git repository, or you do not have git
-installed, you must set this to `false`.
 
 -------------
 
@@ -237,7 +237,7 @@ Forthcoming...
 
 -------------
 
-### `extractor.extract(globs)`
+### `extractor.extract(globs, encoding = null)`
 
 Extract messages from source files.
 
@@ -246,6 +246,7 @@ See: https://github.com/oliviertassinari/i18n-extract
 ```javascript
 /**
  * @param {array} File globs
+ * @param {string} (optional) File encoding, default is opts.encoding, or utf-8.
  * @return {array} Extracted message objects
  *
  * @throws {ArgumentError}
@@ -344,13 +345,20 @@ The result object is of the form:
 - [@babel/register](https://www.npmjs.com/package/@babel/register)
 - [@babel/traverse](https://www.npmjs.com/package/@babel/traverse)
 - [chalk](https://www.npmjs.com/package/chalk)
+- [deepmerge](https://www.npmjs.com/package/deepmerge)
 - [gettext-parser](https://www.npmjs.com/package/gettext-parser)
 - [globby](https://www.npmjs.com/package/globby)
-- [i18n-extract](https://www.npmjs.com/package/i18n-extract)
 
 
 ## License
 
 ***MIT License***
 
-See [LICENSE.txt](LICENSE.txt)
+See file [LICENSE.txt](LICENSE.txt).
+
+## Notice
+
+Some core functionality is from [i18n-extract by Olivier Tassinari][i18n-extract]
+(MIT License). See fiile [NOTICE.md][NOTICE.md] for Third-party notices.
+
+[i18n-extract]: (https://www.npmjs.com/package/i18n-extract)
