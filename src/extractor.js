@@ -25,7 +25,7 @@
 /**
  * * Contains code copied, repackaged, and modified from i18n-extract
  *
- * - https://mochajs.org/
+ * - https://www.npmjs.com/package/i18n-extract
  * - https://github.com/oliviertassinari/i18n-extract/blob/9110ba51/src/extractFromCode.js
  *
  * Methods _getKeys() and _extractFromCode()
@@ -90,19 +90,20 @@ const Defaults = {
     context  : '',
     encoding : 'utf-8',
     marker   : ['i18n', '__'],
+    parsing  : {
+        argPos              : 0,
+        members             : false,
+        parser              : null,
+        babelOptions        : null,
+        commentRegExp       : /i18n-extract (.+)/,
+        commentIgnoreRegExp : /i18n-extract-disable-line/,
+    },
     logging: {
         chalks: {
             info: {
                 prefix: chalk.green,
             },
         },
-    },
-    parsing  : {
-        parser              : null,
-        babelOptions        : null,
-        keyLoc              : 0,
-        commentRegExp       : /i18n-extract (.+)/,
-        commentIgnoreRegExp : /i18n-extract-disable-line/,
     },
 }
 
@@ -224,7 +225,8 @@ class Extractor extends Base {
         const markersHash = arrayHash(markers)
         
         const {
-            keyLoc,
+            argPos,
+            members,
             commentRegExp,
             commentIgnoreRegExp,
         } = this.opts.parsing
@@ -257,33 +259,40 @@ class Extractor extends Base {
             CallExpression: (path) => {
 
                 const {node} = path
+                const {loc, callee: {name, type, property}} = node
 
-                if (node.loc) {
-                    if (ignoredLines.includes(node.loc.end.line)) {
-                        // Skip ignored lines
-                        return
-                    }
-                }
-
-                const {callee: {name, type}} = node
-
-                const shouldProcess = Boolean(
-                    (type === 'Identifier' && markersHash[name]) ||
-                    markers.some(marker => path.get('callee').matchesPattern(marker))
+                const shouldExtract = Boolean(
+                    // Skip ignored lines
+                    (
+                        !loc ||
+                        !ignoredLines.includes(loc.end.line)
+                    ) &&
+                    (
+                        // Match marker
+                        (
+                            type == 'Identifier' &&
+                            markersHash[name]
+                        ) ||
+                        // Include members if enabled
+                        (
+                            members &&
+                            type == 'MemberExpression' &&
+                            markersHash[property.name]
+                        )
+                        //||markers.some(marker => path.get('callee').matchesPattern(marker))
+                    )
                 )
-                if (!shouldProcess) {
+                if (!shouldExtract) {
                     return
                 }
-                //console.log(node)
-                const nodeArg = keyLoc < 0
-                    ? node.arguments[node.arguments.length + keyLoc]
-                    : node.arguments[keyLoc]
 
-                this._getKeys(nodeArg).filter(Boolean).forEach(key => {
-                    keys.push({
-                        key,
-                        loc: node.loc,
-                    })
+                const apos = argPos < 0
+                    ? node.arguments.length + argPos
+                    : argPos
+                const arg = node.arguments[apos]
+
+                this._getKeys(arg).filter(Boolean).forEach(key => {
+                    keys.push({key, loc: node.loc})
                 })
             },
         })
@@ -310,7 +319,10 @@ class Extractor extends Base {
             const left = this._getKeys(node.left)
             const right = this._getKeys(node.right)
             if (left.length > 1 || right.length > 1) {
-                this.logger.warn('Unsupported multiple keys for binary expression, keys skipped.'); // TODO
+                // TODO
+                this.logger.warn( 
+                    'Unsupported multiple keys for binary expression, keys skipped.'
+                )
             }
             return [left[0] + right[0]]
         }
@@ -330,7 +342,9 @@ class Extractor extends Base {
                 case '||':
                     return [...this._getKeys(node.left), ...this._getKeys(node.right)]
                 default:
-                    this.logger.warn(`Unsupported logicalExpression operator: ${node.operator}`)
+                    this.logger.warn(
+                        `Unsupported logicalExpression operator: ${node.operator}`
+                    )
                     return [null]
             }
         }
