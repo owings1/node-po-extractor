@@ -18,6 +18,7 @@ If you have any comments or suggestions, please drop me a line, or file an issue
 
 ## Features
 
+- Support mutliple markers, e.g. `'__'` and `'i18n'`.
 - Generate file reference comments. Advanced comment options.
 - Two merge modes, `patch` (default), which does not remove messages missing
   from the extraction, or `replace` which does.
@@ -47,7 +48,7 @@ const opts = {}
 const extractor = new Extractor(opts)
 const merger = new Merger(opts)
 const messages = extractor.extract('src/**/*.js')
-merger.mergePo('locale/en/messages.po', messages)
+merger.mergePo('locale/fr/messages.po', messages)
 ```
 
 ## Options
@@ -131,6 +132,10 @@ individual files.
 -------------
 
 #### `parsing` (*object*)
+
+- **argPos** (*integer* default 0): The argument position of the message.
+
+- **members** (*boolean* default false): Whether to include member calls, e.g. `obj.i18n()`.
 
 - **parser** (*string* default 'flow'): The babel parser to use, 'typescript' or 'flow'.
 

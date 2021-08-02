@@ -4,6 +4,8 @@
 
 **MIT License**
 
+- https://www.npmjs.com/package/i18n-extract
+
 - https://github.com/oliviertassinari/i18n-extract
 
 Code copied, repackaged, and modified.
