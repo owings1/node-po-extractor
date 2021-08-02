@@ -85,7 +85,7 @@ installed, you must set this to `false`.
 
 -------------
 
-#### `verbosity` (*integer*)
+#### `verbose` (*integer*)
 
 **Default**: `0`
 
@@ -229,25 +229,65 @@ See [this page for more details](https://www.gnu.org/software/gettext/manual/htm
 
 ### Sorting
 
-Forthcoming...
+Documentation forthcoming.
 
 -------------
 
 ## API
 
--------------
-
 ### `extractor.extract(globs, encoding = null)`
 
 Extract messages from source files.
 
-See: https://github.com/oliviertassinari/i18n-extract
+```javascript
+/**
+ * @param {array} File globs
+ * @param {string} (optional) File encoding, default is opts.encoding
+ * @return {array} Extracted message objects
+ *
+ * @throws {ArgumentError}
+ */
+```
+
+-------------
+
+### `extractor.addFile(file, encoding = null)`
+
+Extract messges from a file and add them to the index.
+
+```javascript
+/**
+ * @param {string} The file
+ * @param {string} (optional) File encoding, default is opts.encoding
+ * @return {self}
+ *
+ * @throws {ArgumentError}
+ */
+```
+
+-------------
+
+### `extractor.getMessages()`
+
+Get all extracted messages.
+
+```javascript
+/**
+ * @return {array} The message objects
+ */
+```
+
+-------------
+
+### `extractor.addFiles(globs, encoding = null)`
+
+Extract messges from files and add them to the index.
 
 ```javascript
 /**
  * @param {array} File globs
- * @param {string} (optional) File encoding, default is opts.encoding, or utf-8.
- * @return {array} Extracted message objects
+ * @param {string} (optional) File encoding, default is opts.encoding
+ * @return {self}
  *
  * @throws {ArgumentError}
  */
@@ -275,6 +315,27 @@ Update a po file with the extracted messages.
 
 -------------
 
+### `mergePos(globs, messages)`
+
+Update po files with the extracted messages.
+
+
+```javascript
+/**
+ * @param {array|string} Po file path(s)/glob(s)
+ * @param {array} The messages
+ * @return {array} The merge info results
+ *
+ * @throws {ArgumentError}
+ * @throws {ExecExitError}
+ * @throws {ExecResultError}
+ * @throws {UnsavedChangesError}
+ * @emits `beforeSave`
+ */
+```
+
+-------------
+
 ### `merger.mergePoTo(sourceFile, destFile, messages)`
 
 Update a po file with the extracted messages.
@@ -283,6 +344,28 @@ Update a po file with the extracted messages.
 /**
  * @param {string} The source po file
  * @param {string} The destination file
+ * @param {array} The messages
+ * @return {object} The merge info result
+ * 
+ * @throws {ArgumentError}
+ * @throws {ExecExitError}
+ * @throws {ExecResultError}
+ * @throws {UnsavedChangesError}
+ * @emits `beforeSave`
+ */
+```
+
+-------------
+
+
+### `merger.mergePosTo(sourceGlob, destDir, messages)`
+
+Update a po files with the extracted messages.
+
+```javascript
+/**
+ * @param {array|string} Po file path(s)/glob(s)
+ * @param {string} The destination directory
  * @param {array} The messages
  * @return {object} The merge info result
  * 
@@ -347,6 +430,7 @@ The result object is of the form:
 - [chalk](https://www.npmjs.com/package/chalk)
 - [deepmerge](https://www.npmjs.com/package/deepmerge)
 - [gettext-parser](https://www.npmjs.com/package/gettext-parser)
+- [fs-extra](https://www.npmjs.com/package/fs-extra)
 - [globby](https://www.npmjs.com/package/globby)
 
 
