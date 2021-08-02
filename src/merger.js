@@ -38,6 +38,7 @@ const {
     isFunction,
     lget,
     lset,
+    rekey,
     relPath,
     resolveSafe,
     revalue,
@@ -231,9 +232,15 @@ class Merger extends Base {
             )
         }
 
-        const isReferences = this.opts.references.enabled
+        const isRefs = this.opts.references.enabled
+        const source = po.translations[context]
+        const headersLc = rekey(po.headers, key => key.toLowerCase())
 
-        this.verbose(2, 'mergePoResult', {context, isReferences})
+        this.logger.info('Processing po', {
+            context,
+            language     : headersLc.language || 'unknown',
+            translations : Object.keys(source).length - ('' in source),
+        })
 
         const track = {
             added   : {},
@@ -241,19 +248,10 @@ class Merger extends Base {
             changed : {},
             missing : {},
         }
-
         const data = {
             patch   : {},
             replace : {},
         }
-
-        const source = po.translations[context]
-
-        this.logger.info('Processing po', {
-            context,
-            language     : po.headers.language || 'unknown',
-            translations : Object.keys(source).length - ('' in source),
-        })
 
         messages.forEach(message => {
 
@@ -277,7 +275,7 @@ class Merger extends Base {
             data.patch[msgid] = tran
             data.replace[msgid] = tran
 
-            if (isReferences) {
+            if (isRefs) {
                 // Add file location reference comment.
                 const refs = castToArray(message.refs)
                 this.verbose(3, {refs})

@@ -404,6 +404,14 @@ class Util {
         return raw
     }
 
+    static rekey(obj, cb) {
+        return Object.fromEntries(
+            Object.entries(obj).map(([key, value], i) =>
+                [cb(key, i), value]
+            )
+        )
+    }
+
     static relPath(baseDir, file) {
         if (baseDir) {
             return path.relative(baseDir, file)
