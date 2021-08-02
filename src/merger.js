@@ -25,7 +25,11 @@
 
 // Dependency requires
 const chalk = require('chalk')
+const fs    = require('fs')
+const fse   = require('fs-extra')
+const globby = require('globby')
 const parser = require('gettext-parser').po
+const path   = require('path')
 
 // Package requires
 const Base = require('./base')
@@ -104,10 +108,11 @@ class Merger extends Base {
             file     , 'file'     , 'string',
             messages , 'messages' , 'array',
         )
-        this._checkGitDirty(file)
         const {baseDir, forceSave} = this.opts
         const rel = relPath(baseDir, file)
+        this._checkGitDirty(file)
         const result = this.getMergePoResult(file, messages)
+        result.file = rel
         const {content, isChange, sourceContent} = result
         if (isChange || forceSave || !buffersEqual(content, sourceContent)) {
             this.emit('beforeSave', file, content)
@@ -117,6 +122,37 @@ class Merger extends Base {
             this.logger.info('No changes to write', {file: rel})
         }
         return result
+    }
+
+    /**
+     * Update po files with the extracted messages.
+     *
+     * @throws {ArgumentError}
+     * @throws {ExecExitError}
+     * @throws {ExecResultError}
+     * @throws {UnsavedChangesError}
+     *
+     * @emits `beforeSave`
+     *
+     * @param {array|string} Po file path(s)/glob(s)
+     * @param {array} The messages
+     * @return {array} The merge info results
+     */
+    mergePos(globs, messages) {
+        checkArg(messages , 'messages' , 'array')
+        const {baseDir, forceSave} = this.opts
+        globs = castToArray(globs).map(glob => resolveSafe(baseDir, glob))
+        checkArg(globs, 'globs', it => (
+            Boolean(it.length) || 'Argument (globs) cannot be empty'
+        ))
+        const files = globby.sync(globs)
+        files.forEach(file => this._checkGitDirty(file))
+        if (files.length) {
+            this.logger.info('Updating', files.length, 'po files')
+        } else {
+            this.logger.warn('No po files found')
+        }
+        return files.map(file => this.mergePo(file, messages))
     }
 
     /**
@@ -148,6 +184,55 @@ class Merger extends Base {
         this.logger.info('Writing', {file: rel})
         this.writeFile(destFile, content)
         return result
+    }
+
+    /**
+     * Update a po files with the extracted messages.
+     *
+     * @throws {ArgumentError}
+     * @throws {ExecExitError}
+     * @throws {ExecResultError}
+     * @throws {UnsavedChangesError}
+     *
+     * @emits `beforeSave`
+     *
+     * @param {array|string} Po file path(s)/glob(s)
+     * @param {string} The destination directory
+     * @param {array} The messages
+     * @return {array} The merge info results
+     */
+    mergePosTo(sourceGlob, destDir, messages) {
+        checkArg(
+            sourceGlob , 'sourceGlob' , 'string',
+            destDir    , 'destDir'    , 'string',
+            messages   , 'messages'   , 'array',
+        )
+        const {baseDir} = this.opts
+        sourceGlob = resolveSafe(baseDir, sourceGlob)
+        destDir = resolveSafe(baseDir, destDir)
+        const sourceFiles = globby.sync(sourceGlob)
+        const destFiles = sourceFiles.map(file => {
+            const relBase = relPath(baseDir, file)
+            const parts = relBase.split(path.sep)
+            const relShort = parts.length > 1
+                ? parts.slice(1).join(path.sep)
+                : parts.join(path.sep)
+            return path.resolve(destDir, relShort)
+        })
+        if (sourceFiles.length) {
+            this.logger.info('Creating', sourceFiles.length, 'new po files')
+        } else {
+            this.logger.warn('No po files found')
+        }
+        destFiles.forEach(file => {
+            fse.ensureDirSync(path.dirname(file))
+            if (fs.existsSync(file)) {
+                this._checkGitDirty(file)
+            }
+        })
+        return sourceFiles.map((sourceFile, i) =>
+            this.mergePoTo(sourceFile, destFiles[i], messages)
+        )
     }
 
     /**

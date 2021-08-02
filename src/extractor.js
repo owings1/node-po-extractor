@@ -123,12 +123,10 @@ class Extractor extends Base {
     * Extract messages from source files and return the message objects. This
     * is equivalent to calling `this.addFiles().getMessages()`.
     *
-    * See: https://github.com/oliviertassinari/i18n-extract
-    *
     * @throws {ArgumentError}
     *
     * @param {array|string} File path(s)/glob(s)
-    * @param {string} (optional) File encoding, default is opts.encoding, or utf-8.
+    * @param {string} (optional) File encoding, default is `opts.encoding`
     * @return {array} Extracted message objects
     */
     extract(globs, encoding = null) {
@@ -136,14 +134,29 @@ class Extractor extends Base {
     }
 
     /**
-     * Extract messages from source files and add them to the index.
+     * Extract messges from a file and add them to the index.
      *
-     * See: https://github.com/oliviertassinari/i18n-extract
+     * @throws {ArgumentError}
+     *
+     * @param {string} The file
+     * @param {string} (optional) File encoding, default is `opts.encoding`
+     * @return {self}
+     */
+    addFile(file, encoding = null) {
+        checkArg(file, 'file', 'string')
+        encoding = encoding || this.opts.encoding
+        const content = this.readFile(file).toString(encoding)
+        this._addFileContent(file, content)
+        return this
+    }
+
+    /**
+     * Extract messages from source files and add them to the index.
      *
      * @throws {ArgumentError}
      *
      * @param {array|string} File path(s)/glob(s)
-     * @param {string} (optional) File encoding, default is opts.encoding, or utf-8.
+     * @param {string} (optional) File encoding, default is `opts.encoding`
      * @return {self}
      */
     addFiles(globs, encoding = null) {
@@ -160,21 +173,8 @@ class Extractor extends Base {
     }
 
     /**
-     * Extract messges from a file and add them to the index.
+     * Get all extracted messages.
      *
-     * @param {string} The file
-     * @param {string} (optional) File encoding, default is opts.encoding, or utf-8.
-     * @return {self}
-     */
-    addFile(file, encoding = null) {
-        checkArg(file, 'file', 'string')
-        encoding = encoding || this.opts.encoding
-        const content = this.readFile(file).toString(encoding)
-        this._addFileContent(file, content)
-        return this
-    }
-
-    /**
      * @return {array} The collated messages
      */
     getMessages() {
