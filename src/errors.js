@@ -36,6 +36,7 @@ class ArgumentError extends BaseError {}
 class DuplicateKeyError extends BaseError {}
 class ExecExitError extends BaseError {}
 class ExecResultError extends BaseError {}
+class MessageConflictError extends BaseError {}
 class MissingContextError extends BaseError {}
 class UnsavedChangesError extends BaseError {}
 
@@ -44,6 +45,7 @@ module.exports = {
     DuplicateKeyError,
     ExecExitError,
     ExecResultError,
+    MessageConflictError,
     MissingContextError,
     UnsavedChangesError,
 }

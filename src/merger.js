@@ -27,9 +27,6 @@
 const chalk = require('chalk')
 const parser = require('gettext-parser').po
 
-// Node requires
-const fs = require('fs')
-
 // Package requires
 const Base = require('./base')
 const Sort = require('./sorters')
@@ -38,7 +35,6 @@ const {
     castToArray,
     checkArg,
     checkMax,
-    gitFileStatus,
     isFunction,
     lget,
     lset,
@@ -46,18 +42,16 @@ const {
     resolveSafe,
     revalue,
 } = require('./util')
-
 const {
     DuplicateKeyError,
-    MissingContextError,
-    UnsavedChangesError,
+    MissingContextError
 } = require('./errors')
 
 // Default options.
 const Defaults = {
+    context    : '',
     dryRun     : false,
     replace    : false,
-    gitCheck   : true,
     sort       : 'source',
     forceSave  : false,
     references: {
@@ -181,33 +175,6 @@ class Merger extends Base {
     }
 
     /**
-     * Write to a file.
-     *
-     * @throws {ArgumentError}
-     * @throws {ExecExitError}
-     * @throws {ExecResultError}
-     * @throws {UnsavedChangesError}
-     *
-     * @param {string} The file path
-     * @param {buffer} The content to write
-     * @return {undefined}
-     */
-    writeFile(file, content) {
-        checkArg(
-            file    , 'file'    , 'string',
-            content , 'content' , 'buffer',
-        )
-        const {baseDir} = this.opts
-        file = resolveSafe(baseDir, file)
-        this._checkGitDirty(file)
-        if (this.opts.dryRun) {
-            this.logger.warn('Dry run only, not writing', {file: relPath(baseDir, file)})
-        } else {
-            fs.writeFileSync(file, content)
-        }
-    }
-
-    /**
      * Returns a new object with keys sorted.
      *
      * @throws {ArgumentError}
@@ -260,7 +227,7 @@ class Merger extends Base {
 
         if (!po.translations[context]) {
             throw new MissingContextError(
-                `Context ${JSON.stringify(context)} missing from po.`
+                `Context '${context}' missing from po.`
             )
         }
 
@@ -312,10 +279,10 @@ class Merger extends Base {
 
             if (isReferences) {
                 // Add file location reference comment.
-                const references = castToArray(message.references)
-                this.verbose(3, {references})
-                if (references.length) {
-                    const change = this._addReference(references, tran)
+                const refs = castToArray(message.refs)
+                this.verbose(3, {refs})
+                if (refs.length) {
+                    const change = this._addReference(refs, tran)
                     if (found && change) {
                         changes.push(change)
                     }
@@ -383,11 +350,11 @@ class Merger extends Base {
      * @param {object}
      * @return {object|boolean}
      */
-    _addReference(references, tran) {
+    _addReference(refs, tran) {
         if (!tran.comments) {
             tran.comments = {}
         }
-        const reference = this._buildReference(references)
+        const reference = this._buildReference(refs)
         let change = false
         if (tran.comments.reference != reference) {
             change = {
@@ -407,15 +374,15 @@ class Merger extends Base {
      * @param {array}
      * @return {array}
      */
-    _buildReference(references) {
+    _buildReference(refs) {
         const opts = this.opts.references
         const counts = {}
         const built = []
-        for (let i = 0; i < references.length; ++i) {
+        for (let i = 0; i < refs.length; ++i) {
             if (checkMax(built.length, opts.max)) {
                 break
             }
-            const ref = references[i]
+            const ref = refs[i]
             const [file, line] = ref.split(':')
             if (!counts[file]) {
                 counts[file] = 0
@@ -495,55 +462,6 @@ class Merger extends Base {
         }
         this.verbose(2, `sorting by ${sort}`)
         return Sort.tran[sort].bind(that)
-    }
-
-    /**
-     * @private
-     *
-     * @throws {ExecExitError}
-     * @throws {ExecResultError}
-     * @throws {UnsavedChangesError}
-     *
-     * @param {string} The file path
-     * @return {undefined}
-     */
-    _checkGitDirty(file) {
-        const log = this.logger
-        const {baseDir, gitCheck} = this.opts
-        const rel = relPath(baseDir, file)
-        this.verbose(1, 'gitCheck', {gitCheck}, {file: rel})
-        file = resolveSafe(baseDir, file)
-        if (!gitCheck) {
-            return
-        }
-        let fileStatus
-        try {
-            fileStatus = gitFileStatus(file).fileStatus
-            if (fileStatus != 'clean') {
-                throw new UnsavedChangesError(
-                    `Refusing to clobber ${fileStatus} changes in git`
-                )
-            }
-        } catch (err) {
-            log.error(err, {throwing: true})
-            if (err.name == 'ExecResultError') {
-                log.error('Git execution failed with', {code: err.code})
-            } else if (err.name == 'ExecExitError') {
-                const {status, stderr} = err
-                log.error('Git command exited with', {status})
-                if (stderr) {
-                    log.warn('stderr:>>', '\n' + stderr)
-                    log.warn('<<:stderr')
-                    delete err.stderr
-                }
-            } else if (err.name == 'UnsavedChangesError') {
-                log.error('Unsaved changes in git for', {file: rel}, {fileStatus})
-                log.error('Commit, stash, or abandon the changes before continuing')
-            }
-            log.info('Use option', {gitCheck: false}, 'to ignore this check.')
-            throw err
-        }
-        this.verbose(1, 'gitCheck', {fileStatus})
     }
 }
 

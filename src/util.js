@@ -111,6 +111,10 @@ class Util {
         )
     }
 
+    static arrayUnique(...arrs) {
+        return Object.keys(Util.arrayHash(...arrs))
+    }
+
     static buffersEqual(a, b) {
         if (Util.isFunction(a.equals)) {
             return a.equals(b)
@@ -186,6 +190,10 @@ class Util {
 
     static getOrCall(thing, ...args) {
         return Util.isFunction(thing) ? thing(...args) : thing
+    }
+
+    static getOrCallBound(thing, ...args) {
+        return Util.isFunction(thing) ? thing.call(...args) : thing
     }
 
     static gitFileStatus(file) {

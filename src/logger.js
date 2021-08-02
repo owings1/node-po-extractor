@@ -26,7 +26,7 @@ const chalk = require('chalk')
 
 const {
     castToArray,
-    isFunction,
+    getOrCallBound,
     isPlainObject,
     mergePlain,
     parseStack,
@@ -61,13 +61,19 @@ function getLevelNumber(value) {
     return Defaults.logLevel
 }
 
-const Defaults = {
-    logLevel: getLevelNumber(
-        process.env.LOG_LEVEL ||
-        process.env.LOGLEVEL ||
-        2
-    ),
-}
+const Defaults = {}
+
+Defaults.console = console
+
+Defaults.logLevel = getLevelNumber(
+    process.env.DEBUG
+        ? 4
+        : (
+            process.env.LOG_LEVEL ||
+            process.env.LOGLEVEL ||
+            2
+        )
+)
 
 Defaults.chalks = {
     brace: chalk.grey,
@@ -155,18 +161,20 @@ class Logger {
         }
         const levelName = LevelNames[level]
         const {opts} = this
-        let prefix
-        if (isFunction(opts.prefix)) {
-            prefix = opts.prefix.call(this, levelName)
-        } else {
-            prefix = opts.prefix
-        }
-        prefix = castToArray(prefix)
-        console[levelName](...prefix, ...opts.format.call(this, levelName, args))
+        const prefix = castToArray(getOrCallBound(opts.prefix, this, levelName))
+        this.console[levelName](...prefix, ...opts.format.call(this, levelName, args))
     }
 
     get chalks() {
         return this.opts.chalks
+    }
+
+    get console() {
+        return this.opts.console
+    }
+
+    set console(cons) {
+        this.opts.console = cons
     }
 
     get logLevel() {
