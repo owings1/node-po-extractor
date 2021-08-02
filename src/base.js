@@ -41,7 +41,7 @@ const {UnsavedChangesError} = require('./errors')
 const Defaults = {
     baseDir    : '.',
     gitCheck   : true,
-    verbosity  : 0,
+    verbose  : 0,
     logger     : null,
     logging    : {},
 }
@@ -99,17 +99,17 @@ class Base extends EventEmitter {
    }
 
    /**
-    * Logs a message according to verbosity setting.
+    * Logs a message according to verbose setting.
     *
     * @throws {ArgumentError}
     *
-    * @param {integer} The verbosity level of the message
+    * @param {integer} The verbose level of the message
     * @param {...any} The message(s)
     * @return {undefined}
     */
    verbose(vlevel, ...args) {
        checkArg(vlevel, 'vlevel', 'number')
-       if (vlevel > this.opts.verbosity && vlevel + 2 > this.logLevel) {
+       if (vlevel > this.opts.verbose && vlevel + 2 > this.logLevel) {
            return
        }
        this.logger.info(...args)
