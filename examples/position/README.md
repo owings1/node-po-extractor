@@ -1,4 +1,4 @@
-# examples/{name}
+# examples/position
 
 ```bash
 node example.js

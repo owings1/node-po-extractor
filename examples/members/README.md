@@ -1,4 +1,4 @@
-# examples/{name}
+# examples/members
 
 ```bash
 node example.js
