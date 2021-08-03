@@ -29,7 +29,7 @@ const {MessageConflictError} = require('./errors')
 /**
  * Index extracted messages.
  */
-class  Index  {
+class Index  {
 
     /**
      * @constructor

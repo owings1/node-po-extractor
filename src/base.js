@@ -39,17 +39,18 @@ const {UnsavedChangesError} = require('./errors')
 
 // Default options
 const Defaults = {
-    baseDir    : '.',
-    gitCheck   : true,
+    baseDir  : '.',
+    gitCheck : true,
     verbose  : 0,
-    logger     : null,
-    logging    : {},
+    logger   : null,
+    logging  : {},
 }
 
 class Base extends EventEmitter {
 
     constructor(...opts) {
         super()
+        // TODO: skip merging logger even if it is a plain object.
         this.opts = mergePlain(Defaults, ...opts)
         if (!this.logger) {
             this.logger = new Logger(this.opts.logging)
@@ -180,7 +181,7 @@ class Base extends EventEmitter {
        let fileStatus
        try {
            fileStatus = gitFileStatus(file).fileStatus
-           if (fileStatus != 'clean') {
+           if (fileStatus != 'clean' && fileStatus != 'staged') {
                throw new UnsavedChangesError(
                    `Refusing to clobber ${fileStatus} changes in git`
                )
@@ -193,8 +194,8 @@ class Base extends EventEmitter {
                const {status, stderr} = err
                log.error('Git command exited with', {status})
                if (stderr) {
-                   log.warn('stderr:>>', '\n' + stderr)
-                   log.warn('<<:stderr')
+                   log.warn('<stderr>', '\n' + stderr)
+                   log.warn('</stderr>')
                    delete err.stderr
                }
            } else if (err.name == 'UnsavedChangesError') {
