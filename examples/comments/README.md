@@ -4,7 +4,7 @@
 node example.js
 ```
 
-Output:
+## Output:
 
     ------------------
      Without comments 
