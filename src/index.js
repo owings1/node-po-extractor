@@ -35,7 +35,17 @@ class Index  {
      * @constructor
      */
     constructor() {
+        this.clear()
+    }
+
+    /**
+     * Clear the index.
+     *
+     * @return {self}
+     */
+    clear() {
         this.idx = {}
+        return this
     }
 
     /**

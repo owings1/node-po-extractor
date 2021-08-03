@@ -189,6 +189,16 @@ class Extractor extends Base {
     }
 
     /**
+     * Clear all messages.
+     *
+     * @return {self}
+     */
+    clear() {
+        this.idx.clear()
+        return this
+    }
+
+    /**
      * @private
      *
      * @param {string}
