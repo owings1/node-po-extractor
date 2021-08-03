@@ -69,6 +69,8 @@ These options are common to both the `Extractor` and `Merger`.
     If you are not writing to a git repository, or you do not have git installed, you must set this
     to `false`.
 
+- **dryRun** `boolean` default: `false`: Do everything but write files.
+
 - **verbose** `integer` default `0`: Set a value from `1` to `3` to enable more logging.
 
 - **logger** `object` default [`new Logger`][logger]: You can use this to
@@ -122,8 +124,6 @@ These options are common to both the `Extractor` and `Merger`.
     The default is to keep the same order as the source po file, and to sort new translations by `msgid`.
     Other built-in options are `'msgid'`, and `'file'`. Alternatively, you can supply a custom sorting function.
     See below for details.
-
-- **dryrun** `boolean` default: `false`: Do everything but write files.
 
 - **references** `object`: Options for generating reference comments. See [this page for more details][po-ref].
     Available keys:

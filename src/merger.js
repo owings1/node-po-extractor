@@ -56,7 +56,6 @@ const {
 // Default options.
 const Defaults = {
     context    : '',
-    dryRun     : false,
     replace    : false,
     sort       : 'source',
     forceSave  : false,
@@ -74,6 +73,10 @@ const Defaults = {
             },
         },
     },
+}
+
+function globsNotEmpty(value) {
+    return Boolean(value.length) || 'Argument (globs) cannot be empty'
 }
 
 class Merger extends Base {
@@ -114,9 +117,8 @@ class Merger extends Base {
             file     , 'file'     , 'string',
             messages , 'messages' , 'array',
         )
-        const {baseDir, forceSave} = this.opts
-        file = resolveSafe(baseDir, file)
-        const rel = relPath(baseDir, file)
+        const {forceSave} = this.opts
+        const rel = this.relPath(file)
         this._checkGitDirty(file)
         const result = this.getMergePoResult(file, messages)
         result.file = rel
@@ -146,13 +148,18 @@ class Merger extends Base {
      * @return {array} The merge info results
      */
     mergePos(globs, messages) {
-        checkArg(messages , 'messages' , 'array')
-        const {baseDir, forceSave} = this.opts
-        globs = castToArray(globs).map(glob => resolveSafe(baseDir, glob))
-        checkArg(globs, 'globs', it => (
-            Boolean(it.length) || 'Argument (globs) cannot be empty'
-        ))
-        const files = globby.sync(globs)
+        checkArg(
+            globs    , 'globs'    , 'string|array',
+            globs    , 'globs'    , globsNotEmpty,
+            messages , 'messages' , 'array',
+        )
+        //const {baseDir, forceSave} = this.opts
+        //globs = castToArray(globs).map(glob => resolveSafe(baseDir, glob))
+        //checkArg(globs, 'globs', it => (
+        //    Boolean(it.length) || 'Argument (globs) cannot be empty'
+        //))
+        //const files = globby.sync(globs)
+        const files = this.glob(globs)
         files.forEach(file => this._checkGitDirty(file))
         if (files.length) {
             this.logger.info('Updating', files.length, 'po files')
@@ -218,11 +225,10 @@ class Merger extends Base {
             messages   , 'messages'   , 'array',
         )
         const {baseDir} = this.opts
-        sourceGlob = resolveSafe(baseDir, sourceGlob)
-        destDir = resolveSafe(baseDir, destDir)
-        const sourceFiles = globby.sync(sourceGlob)
+        destDir = this.resolve(destDir)
+        const sourceFiles = this.glob(sourceGlob)
         const destFiles = sourceFiles.map(file => {
-            const relBase = relPath(baseDir, file)
+            const relBase = this.relPath(file)
             const parts = relBase.split(path.sep)
             const relShort = parts.length > 1
                 ? parts.slice(1).join(path.sep)
@@ -260,8 +266,7 @@ class Merger extends Base {
             messages   , 'messages'   , 'array',
         )
         const {baseDir, charset, replace} = this.opts
-        sourceFile = resolveSafe(baseDir, sourceFile)
-        const rel = relPath(baseDir, sourceFile)
+        const rel = this.relPath(sourceFile)
         const method = replace ? 'replace' : 'patch'
         this.logger.info('Reading', {file: rel})
         const sourceContent = this.readFile(sourceFile)

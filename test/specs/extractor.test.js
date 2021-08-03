@@ -25,16 +25,7 @@
 const {expect} = require('chai')
 const path = require('path')
 const {resolve} = path
-const {mergePlain} = require('../../src/util')
-
-function ger (cb) {
-    try {
-        cb()
-    } catch (err) {
-        return err
-    }
-    throw new Error('No error thrown')
-}
+const {ger, merge} = require('../helpers/util')
 
 describe('Extractor', () => {
 
@@ -42,11 +33,9 @@ describe('Extractor', () => {
 
     beforeEach(function () {
         this.create = function (opts) {
-            opts = mergePlain({
+            opts = merge({
                 baseDir: resolve(__dirname, '../fixtures/default'),
-                logging: {
-                    logLevel: 1
-                }
+                logging: {logLevel: 1},
             },  opts)
             return new Extractor(opts)
         }
@@ -212,6 +201,7 @@ describe('Extractor', () => {
     })
 
     describe('#clear', () => {
+
         it('should clear messages', function () {
             const extractor = this.create()
             let msgs = extractor.addFile('src/single.js')

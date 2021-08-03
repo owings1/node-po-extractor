@@ -1,7 +1,7 @@
 # examples/comments
 
 ```bash
-node example.js
+node example.js 
 ```
 
 ## Output:

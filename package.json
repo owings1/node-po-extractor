@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "NODE_OPTIONS='--trace-warnings' nyc --reporter=text-summary mocha test/specs/**/*.test.js && nyc report --reporter=lcov",
-    "examples": "node scripts/examples.js"
+    "examples": "scripts/examples",
+    "examples:build": "scripts/examples build",
+    "examples:run": "scripts/examples run"
   },
   "repository": {
     "type": "git",

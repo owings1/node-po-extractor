@@ -160,7 +160,7 @@ class Util {
                     throw ret
                 }
                 ret = ret || `Invalid argument (${name}): ${arg}.`
-            } else if (argType == exp) {
+            } else if (exp.split('|').includes(argType)) {
                 continue
             }
             throw new ArgumentError(
@@ -241,6 +241,8 @@ class Util {
                 fileStatus = 'untracked'
             } else if (attr == 'M ') {
                 fileStatus = 'staged'
+            } else if (attr == 'A ') {
+                fileStatus = 'added'
             } else {
                 // default catch-all
                 fileStatus = 'modified'

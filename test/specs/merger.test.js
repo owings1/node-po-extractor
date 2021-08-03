@@ -23,10 +23,25 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 const {expect} = require('chai')
+const path = require('path')
+const {resolve} = path
+const {ger, merge} = require('../helpers/util')
 
 describe('Merger', () => {
 
     const Merger = require('../../src/merger')
+
+    beforeEach(function () {
+        this.create = function (opts) {
+            opts = merge({
+                baseDir: resolve(__dirname, '../fixtures/default'),
+                dryRun: true,
+                gitCheck: false,
+                logging: {logLevel: 1},
+            },  opts)
+            return new Merger(opts)
+        }
+    })
 
     it('should construct', function () {
         new Merger

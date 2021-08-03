@@ -1,11 +1,8 @@
 // examples/members
-const {Extractor, Merger} = require('../..')
+const {Extractor, Merger, Pretty} = require('../..')
 
 const hr = '\n------------------\n'
-
-function stripHeaders(str) {
-    return str.split('\n\n').slice(1).join('\n\n')
-}
+const pretty = new Pretty({headers: false, indent: 2})
 
 function runCase(title, opts) {
     console.log(hr, title, hr, 'opts:', opts, hr)
@@ -13,8 +10,9 @@ function runCase(title, opts) {
     opts = {baseDir, ...opts}
     const msgs = new Extractor(opts).extract('code.js')
     const res = new Merger(opts).getMergePoResult('messages.po', msgs)
-    const text = res.content.toString('utf-8')
-    console.log(stripHeaders(text))
+    console.log()
+    console.log(pretty.po(res.content))
+    console.log()
 }
 
 runCase('Without members', {members: false})

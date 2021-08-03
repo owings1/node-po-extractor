@@ -23,10 +23,73 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 const {expect} = require('chai')
-
+const {ger} = require('../helpers/util')
 describe('Util', () => {
 
     const Util = require('../../src/util')
+
+    describe.only('#checkArg', () => {
+
+        const {checkArg} = Util
+
+        describe('array', () => {
+
+            it('should pass for array', function () {
+                checkArg([], 'arg', 'array')
+            })
+
+            it('should fail for string', function () {
+                const err = ger(() => checkArg('', 'arg', 'array'))
+                expect(err.name).to.equal('ArgumentError')
+            })
+
+            it('should fail for object', function () {
+                const err = ger(() => checkArg({}, 'arg', 'array'))
+                expect(err.name).to.equal('ArgumentError')
+            })
+
+        })
+
+        describe('callback', () => {
+
+            it('should pass for return true', function () {
+                checkArg(null, 'arg', () => true)
+            })
+
+            it('should fail for return false', function () {
+                const err = ger(() => checkArg(null, 'arg', () => false))
+                expect(err.name).to.equal('ArgumentError')
+            })
+
+            it('should fail for return string and have message', function () {
+                const err = ger(() => checkArg(null, 'arg', () => 'test-message'))
+                expect(err.name).to.equal('ArgumentError')
+                expect(err.message).to.contain('test-message')
+            })
+
+            it('should fail for return Error and throw same', function () {
+                const exp = new Error
+                const err = ger(() => checkArg(null, 'arg', () => exp))
+                expect(err).to.equal(exp)
+            })
+        })
+
+        describe('string|array', () => {
+
+            it('should pass for string', function () {
+                checkArg('', 'arg', 'string|array')
+            })
+
+            it('should pass for array', function () {
+                checkArg([], 'arg', 'string|array')
+            })
+
+            it('should fail for null', function () {
+                const err = ger(() => checkArg(null, 'arg', 'string|array'))
+                expect(err.name).to.equal('ArgumentError')
+            })
+        })
+    })
 
     describe('#isFunction', () => {
         it('should return true for function', function () {

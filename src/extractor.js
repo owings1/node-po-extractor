@@ -173,9 +173,7 @@ class Extractor extends Base {
      */
     addFile(file, encoding = null) {
         checkArg(file, 'file', 'string')
-        const {baseDir} = this.opts
-        file = resolveSafe(baseDir, file)
-        const rel = relPath(baseDir, file)
+        const rel = this.relPath(file)
         this.logger.info('Extracting from', {file: rel})
         const count = this._addFile(file, encoding).length
         this.logger.info('Extracted', count, 'key instances')
@@ -207,12 +205,20 @@ class Extractor extends Base {
         return this
     }
 
+    /**
+     * @private
+     *
+     * @param {string}
+     * @param {string}
+     * @return {array}
+     */
     _addFile(file, encoding = null) {
         checkArg(file, 'file', 'string')
         encoding = encoding || this.opts.encoding
         const content = this.readFile(file).toString(encoding)
         return this._addFileContent(file, content)
     }
+
     /**
      * @private
      *
@@ -221,9 +227,8 @@ class Extractor extends Base {
      * @return {array}
      */
     _addFileContent(file, content) {
-        const {baseDir, context} = this.opts
-        file = resolveSafe(baseDir, file)
-        const rel = relPath(baseDir, file)
+        const {context} = this.opts
+        const rel = this.relPath(file)
         this.verbose(1, {file: rel})
         const msgs = this._extractFromCode(content)
         msgs.forEach(msg => {
