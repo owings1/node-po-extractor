@@ -213,7 +213,8 @@ class Merger extends Base {
      */
     mergePosTo(sourceGlob, destDir, messages) {
         checkArg(
-            sourceGlob , 'sourceGlob' , 'string',
+            sourceGlob , 'sourceGlob' , 'string|array',
+            sourceGlob , 'sourceGlob' , globsNotEmpty,
             destDir    , 'destDir'    , 'string',
             messages   , 'messages'   , 'array',
         )
