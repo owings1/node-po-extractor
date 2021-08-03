@@ -6,7 +6,7 @@ const fs     = require('fs')
 const path   = require('path')
 const {basename, dirname, relative, resolve} = path
 
-const {gitFileStatus} = require('../src/util')
+const {gitFileStatus, mergePlain} = require('../src/util')
 const {Logger} = require('..')
 
 const EgScript = 'example.js'
@@ -205,7 +205,17 @@ class ExamplesScript {
 
     runExample(name, sopts = {}) {
         const {logger} = this
-        sopts = {maxBuffer: 1024 * 10, ...sopts} // 10K max
+        sopts = mergePlain(
+            {
+                // 10K max
+                maxBuffer: 1024 * 10,
+                env: {
+                    ...process.env,
+                    //FORCE_COLOR: '2',
+                },
+            },
+            sopts,
+        )
         const script = resolve(ExamplesDir, name, EgScript)
         const cmd = process.execPath
         const result = chproc.spawnSync(cmd, [script], sopts)
