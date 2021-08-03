@@ -264,22 +264,25 @@ class Extractor extends Base {
 
         const keys = []
         const ignoredLineHash = {}
-        const commentHash = {}
-        // {lochash: comment}
-        const commentLocHash = {}
-        // {line: []}
-        const commentLineEndHash = {}
+        const cidx = new CommentIndex
+
+        if (opts.comments.extract) {
+            cidx.add(ast.comments)
+        }
+
+        const makeComment = keyLine => {
+            const cmts = cidx.forKeyAt(keyLine)
+            cidx.remove(cmts)
+            return cmts.map(it => it.value.trim())
+                .filter(Boolean)
+                .join('\n') || null
+        }
         
         ast.comments.forEach(comment => {
 
             const {loc} = comment
             const lineStart = loc.start.line
-            const lineEnd = loc.end.line
 
-            // Add to hash for adding extracted comments.
-            if (opts.comments.extract) {
-                commentHash[lineEnd] = comment
-            }
 
             // Look for keys in the comments.
             const keyMatch = commentKeyRegex
@@ -288,14 +291,11 @@ class Extractor extends Base {
             if (keyMatch) {
                 const msg = {
                     key: keyMatch[1].trim(),
-                    loc: comment.loc,
+                    loc: loc,
                 }
-                const cmtLine = lineStart - 1
-                if (commentHash[cmtLine]) {
-                    msg.comment = commentHash[cmtLine].value.trim()
-                    delete commentHash[cmtLine]
-                }
-                delete commentHash[lineStart]
+                cidx.remove(comment)
+                msg.comment = makeComment(lineStart)
+                
                 keys.push(msg)
             }
 
@@ -344,20 +344,8 @@ class Extractor extends Base {
                 const arg = node.arguments[aidx]
 
                 this._getKeys(arg).filter(Boolean).forEach(key => {
-                    const msg = {key, loc: node.loc}
-                    // Extract comments.
-                    const cmts = []
-                    // Check the line above and the current line.
-                    for (let i = -1; i < 1; ++i) {
-                        const line = node.loc.start.line + i
-                        if (commentHash[line]) {
-                            cmts.push(commentHash[line].value.trim())
-                            // Don't add this comment to another key/
-                            delete commentHash[line]
-                        }
-                    }
-                    msg.comment = cmts.join('\n') || null
-
+                    const msg = {key, loc}
+                    msg.comment = makeComment(loc.start.line)
                     keys.push(msg)
                 })
             },
@@ -462,6 +450,54 @@ class Extractor extends Base {
     }
 }
 
+class CommentIndex {
+
+    constructor() {
+        this.idx = {}
+    }
+
+    add(comments) {
+        castToArray(comments).forEach(comment => {
+            const {loc} = comment
+            const {line} = loc.end
+            const hash = this._hash(loc)
+            lset(this.idx, [line, hash], comment)
+        })
+    }
+
+    remove(comments) {
+        castToArray(comments).forEach(comment => {
+            const {loc} = comment
+            const {line} = loc.end
+            const hash = this._hash(loc)
+            if (this.idx[line]) {
+                delete this.idx[line][hash]
+                if (!Object.keys(this.idx[line]).length) {
+                    delete this.idx[line]
+                }
+            }
+        })
+    }
+
+    forKeyAt(keyLine) {
+        const cmts = []
+        // Check the line above and the current line.
+        for (let i = -1; i < 1; ++i) {
+            const line = keyLine + i
+            if (this.idx[line]) {
+                Object.values(this.idx[line]).forEach(comment => {
+                    cmts.push(comment)
+                })
+            }
+        }
+        return cmts
+    }
+
+    _hash(loc) {
+        const {start, end} = loc
+        return [start.line, start.column, end.line, end.column].join('/')
+    }
+}
 /**
  * Copied and adapted from:
  *
