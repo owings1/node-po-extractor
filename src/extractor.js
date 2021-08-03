@@ -28,8 +28,7 @@
  * - https://www.npmjs.com/package/i18n-extract
  * - https://github.com/oliviertassinari/i18n-extract/blob/9110ba51/src/extractFromCode.js
  *
- * Methods _getKeys() and _extractFromCode()
- * Function getBabelOpts()
+ * Methods _getKeys(), _extractFromCode(), and _getBabelOpts()
  *
  * The 18n-extract license is as follows:
  * --------------------------------
@@ -305,6 +304,7 @@ class Extractor extends Base {
                 : null
             if (ignoreMatch) {
                 ignoredLineHash[lineStart] = true
+                cidx.remove(comment)
             }
         })
 
@@ -422,7 +422,7 @@ class Extractor extends Base {
      * @return {object}
      */
     _getBabelOpts() {
-        const {parser = Defaults.parser} = this.opts
+        const {parser} = this.opts
 
         const type = typeOf(parser)
 
