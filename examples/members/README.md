@@ -18,9 +18,11 @@ node example.js
     ❯ Reading file: messages.po
     ❯ Processing po { context: '', language: 'fr', translations: 0 }
     ❯ Totals { added: 1, found: 0, changed: 0, missing: 0 }
-    #: code.js:5
-    msgid "Message 1 non-member"
-    msgstr ""
+    
+      #: code.js:5
+      msgid "Message 1 non-member"
+      msgstr ""
+    
     
     ------------------
      With members 
@@ -33,15 +35,17 @@ node example.js
     ❯ Reading file: messages.po
     ❯ Processing po { context: '', language: 'fr', translations: 0 }
     ❯ Totals { added: 3, found: 0, changed: 0, missing: 0 }
-    #: code.js:5
-    msgid "Message 1 non-member"
-    msgstr ""
     
-    #: code.js:6
-    msgid "Message 2 member"
-    msgstr ""
+      #: code.js:5
+      msgid "Message 1 non-member"
+      msgstr ""
+      
+      #: code.js:6
+      msgid "Message 2 member"
+      msgstr ""
+      
+      #: code.js:7
+      msgid "Message 3 member"
+      msgstr ""
     
-    #: code.js:7
-    msgid "Message 3 member"
-    msgstr ""
     
