@@ -43,6 +43,7 @@ const {
     isObject,
     lget,
     lset,
+    mergePlain,
     rekey,
     relPath,
     resolveSafe,
@@ -362,7 +363,7 @@ class Merger extends Base {
             }
 
             const found = source[msgid]
-            const tran = {msgid, msgstr: [''], ...found}
+            const tran = mergePlain({msgid, msgstr: ['']}, found)
             const changes = []
             const info = {message, tran}
 
