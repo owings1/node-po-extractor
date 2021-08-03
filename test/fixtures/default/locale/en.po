@@ -2,3 +2,11 @@ msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Language: en\n"
+
+msgid "m1"
+msgstr "m1t"
+
+#. extracted-existing
+msgid "m2"
+msgstr "m2t"
+
