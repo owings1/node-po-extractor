@@ -1,0 +1,2 @@
+function __() {}
+__('Message')
