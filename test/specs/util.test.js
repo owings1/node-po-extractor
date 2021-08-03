@@ -24,11 +24,12 @@
  */
 const {expect} = require('chai')
 const {ger} = require('../helpers/util')
+
 describe('Util', () => {
 
     const Util = require('../../src/util')
 
-    describe.only('#checkArg', () => {
+    describe('#checkArg', () => {
 
         const {checkArg} = Util
 
