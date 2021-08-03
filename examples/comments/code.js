@@ -12,3 +12,9 @@ __('Message 5')
 /* Multi-line comment
 for message 6 */
 __('Message 6')
+__('Message 7') /* i18n-ignore-line */
+__('Message 8') // i18n-ignore-line
+/* i18n-ignore-line */ __('Message 9')
+__('Message X') /*
+                  * i18n-ignore-line
+                  */

@@ -1,4 +1,4 @@
-// examples/comments
+// examples/position
 const {Extractor, Merger} = require('../..')
 
 const hr = '\n------------------\n'
@@ -17,18 +17,8 @@ function runCase(title, opts) {
     console.log(stripHeaders(text))
 }
 
-runCase('Without comments', {
-    comments: {
-        extract: false,
-        keyRegex: null,
-        ignoreRegex: null,
-    },
-})
+runCase('Default')
 
-runCase('With comments', {
-    comments: {
-        extract: true,
-        keyRegex: /i18n-extract (.+)/,
-        ignoreRegex: /i18n-ignore-line/,
-    },
-})
+runCase('Position 1', {argPos: 1})
+
+runCase('Position -1', {argPos: -1})
