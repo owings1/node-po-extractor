@@ -40,6 +40,7 @@ const {
     checkArg,
     checkMax,
     isFunction,
+    isObject,
     lget,
     lset,
     rekey,
@@ -64,7 +65,7 @@ const Defaults = {
         max        : -1,
         perFile    : -1,
         perLine    : -1,
-        lineLength : 120,
+        lineLength : -1,
     },
     logging: {
         chalks: {
@@ -86,6 +87,11 @@ class Merger extends Base {
      */
     constructor(opts) {
         super(Defaults, opts)
+        if (this.opts.references === true) {
+            this.opts.references = {...Defaults.references}
+        } else if (!isObject(this.opts.references)) {
+            this.opts.references = {}
+        }
         this._checkSortOption(this.sort)
     }
 
@@ -109,6 +115,7 @@ class Merger extends Base {
             messages , 'messages' , 'array',
         )
         const {baseDir, forceSave} = this.opts
+        file = resolveSafe(baseDir, file)
         const rel = relPath(baseDir, file)
         this._checkGitDirty(file)
         const result = this.getMergePoResult(file, messages)
@@ -177,7 +184,10 @@ class Merger extends Base {
             messages   , 'messages'   , 'array',
         )
         this._checkGitDirty(destFile)
-        const rel = relPath(this.opts.baseDir, destFile)
+        const {baseDir} = this.opts
+        sourceFile = resolveSafe(baseDir, sourceFile)
+        destFile = resolveSafe(baseDir, destFile)
+        const rel = relPath(baseDir, destFile)
         const result = this.getMergePoResult(sourceFile, messages)
         const {content} = result
         this.emit('beforeSave', destFile, content)
@@ -250,8 +260,10 @@ class Merger extends Base {
             messages   , 'messages'   , 'array',
         )
         const {baseDir, charset, replace} = this.opts
+        sourceFile = resolveSafe(baseDir, sourceFile)
+        const rel = relPath(baseDir, sourceFile)
         const method = replace ? 'replace' : 'patch'
-        this.logger.info('Reading', {file: relPath(baseDir, sourceFile)})
+        this.logger.info('Reading', {file: rel})
         const sourceContent = this.readFile(sourceFile)
         const sourcePo = parser.parse(sourceContent, charset)
         const {pos, ...result} = this._mergePoResult(sourcePo, messages)
@@ -365,14 +377,23 @@ class Merger extends Base {
                 const refs = castToArray(message.refs)
                 this.verbose(3, {refs})
                 if (refs.length) {
-                    const change = this._addReference(refs, tran)
-                    if (found && change) {
-                        changes.push(change)
+                    const refsChange = this._addReference(refs, tran)
+                    if (found && refsChange) {
+                        changes.push(refsChange)
                     }
                 } else {
                     this.logger.warn(
                         `Missing location reference for '${msgid}'`
                     )
+                }
+            }
+
+            // Add extracted comments.
+            const cmts = castToArray(message.comments)
+            if (cmts.length) {
+                const cmtsChange = this._addExtractedComment(cmts, tran)
+                if (found && cmtsChange) {
+                    changes.push(cmtsChange)
                 }
             }
 
@@ -424,6 +445,24 @@ class Merger extends Base {
         this.verbose(2, 'mergePoResult', {isChange})
 
         return {track, counts, isChange, pos}
+    }
+
+    _addExtractedComment(cmts, tran) {
+        if (!tran.comments) {
+            tran.comments = {}
+        }
+        const extracted = cmts.join('\n')
+        let change = false
+        if (tran.comments.extracted != extracted) {
+            change = {
+                'comments.extracted': {
+                    old: tran.comments.extracted,
+                    new: extracted,
+                }
+            }
+            tran.comments.extracted = extracted
+        }
+        return change
     }
 
     /**

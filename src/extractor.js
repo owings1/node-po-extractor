@@ -81,6 +81,7 @@ const {
     locToObject,
     relPath,
     resolveSafe,
+    typeOf,
 } = require('./util')
 
 const {ArgumentError} = require('./errors')
@@ -90,14 +91,14 @@ const Defaults = {
     context  : '',
     encoding : 'utf-8',
     marker   : ['i18n', '__'],
-    parsing  : {
-        argPos              : 0,
-        members             : false,
-        parser              : null,
-        babelOptions        : null,
-        commentRegExp       : /i18n-extract (.+)/,
-        commentIgnoreRegExp : /i18n-extract-disable-line/,
+    argPos   : 0,
+    members  : false,
+    comments : {
+        extract     : true,
+        keyRegex    : /i18n-extract (.+)/,
+        ignoreRegex : /i18n-ignore-line/,
     },
+    parser   : 'flow',
     logging: {
         chalks: {
             info: {
@@ -116,7 +117,9 @@ class Extractor extends Base {
      */
     constructor(opts) {
         super(Defaults, opts)
-        this.opts.marker = arrayUnique(castToArray(this.opts.marker))
+        this.opts.comments = this._getCommentOpts()
+        // Fail fast.
+        this._getBabelOpts()
         this.idx = new Index
     }
 
@@ -132,23 +135,6 @@ class Extractor extends Base {
     */
     extract(globs, encoding = null) {
         return this.addFiles(globs, encoding).getMessages()
-    }
-
-    /**
-     * Extract messges from a file and add them to the index.
-     *
-     * @throws {ArgumentError}
-     *
-     * @param {string} The file
-     * @param {string} (optional) File encoding, default is `opts.encoding`
-     * @return {self}
-     */
-    addFile(file, encoding = null) {
-        checkArg(file, 'file', 'string')
-        encoding = encoding || this.opts.encoding
-        const content = this.readFile(file).toString(encoding)
-        this._addFileContent(file, content)
-        return this
     }
 
     /**
@@ -169,7 +155,31 @@ class Extractor extends Base {
         ))
         const files = globby.sync(globs)
         this.logger.info('Extracting from', files.length, 'files')
-        files.forEach(file => this.addFile(file, encoding))
+        let count = 0
+        files.forEach(file => {
+            count += this._addFile(file, encoding).length
+        })
+        this.logger.info('Extracted', count, 'key instances')
+        return this
+    }
+
+    /**
+     * Extract messges from a file and add them to the index.
+     *
+     * @throws {ArgumentError}
+     *
+     * @param {string} The file
+     * @param {string} (optional) File encoding, default is `opts.encoding`
+     * @return {self}
+     */
+    addFile(file, encoding = null) {
+        checkArg(file, 'file', 'string')
+        const {baseDir} = this.opts
+        file = resolveSafe(baseDir, file)
+        const rel = relPath(baseDir, file)
+        this.logger.info('Extracting from', {file: rel})
+        const count = this._addFile(file, encoding).length
+        this.logger.info('Extracted', count, 'key instances')
         return this
     }
 
@@ -198,26 +208,34 @@ class Extractor extends Base {
         return this
     }
 
+    _addFile(file, encoding = null) {
+        checkArg(file, 'file', 'string')
+        encoding = encoding || this.opts.encoding
+        const content = this.readFile(file).toString(encoding)
+        return this._addFileContent(file, content)
+    }
     /**
      * @private
      *
      * @param {string}
      * @param {string}
-     * @return {undefined}
+     * @return {array}
      */
     _addFileContent(file, content) {
-        const {baseDir, context, marker} = this.opts
+        const {baseDir, context} = this.opts
+        file = resolveSafe(baseDir, file)
         const rel = relPath(baseDir, file)
         this.verbose(1, {file: rel})
         const msgs = this._extractFromCode(content)
         msgs.forEach(msg => {
             const {key} = msg
             const ref = [rel, msg.loc.start.line].join(':')
-            const cmt = null
+            const cmt = msg.comment || null
             this.verbose(3, {key, ref, cmt})
             this.idx.add(context, key, ref, cmt)
         })
         this.verbose(msgs.length ? 1 : 2, msgs.length, 'keys', {file: rel})
+        return msgs
     }
 
     /**
@@ -231,78 +249,116 @@ class Extractor extends Base {
      */
     _extractFromCode(content) {
 
-        const markers = castToArray(this.opts.marker)
+        const {opts} = this
+        const markers = arrayUnique(castToArray(opts.marker))
         const markersHash = arrayHash(markers)
-        
-        const {
-            argPos,
-            members,
-            commentRegExp,
-            commentIgnoreRegExp,
-        } = this.opts.parsing
 
-        const {ast} = transformSync(content, this._getBableOpts())
+        const commentKeyRegex = opts.comments.keyRegex
+            ? new RegExp(opts.comments.keyRegex)
+            : null
+        const commentIngoreRegex = opts.comments.ignoreRegex
+            ? new RegExp(opts.comments.ignoreRegex)
+            : null
+
+        const {ast} = transformSync(content, this._getBabelOpts())
 
         const keys = []
-        const ignoredLines = []
-
-        // Look for keys in the comments.
+        const ignoredLineHash = {}
+        const commentHash = {}
+        // {lochash: comment}
+        const commentLocHash = {}
+        // {line: []}
+        const commentLineEndHash = {}
+        
         ast.comments.forEach(comment => {
-            let match = commentRegExp.exec(comment.value)
-            if (match) {
-                keys.push({
-                    key: match[1].trim(),
+
+            const {loc} = comment
+            const lineStart = loc.start.line
+            const lineEnd = loc.end.line
+
+            // Add to hash for adding extracted comments.
+            if (opts.comments.extract) {
+                commentHash[lineEnd] = comment
+            }
+
+            // Look for keys in the comments.
+            const keyMatch = commentKeyRegex
+                ? commentKeyRegex.exec(comment.value)
+                : null
+            if (keyMatch) {
+                const msg = {
+                    key: keyMatch[1].trim(),
                     loc: comment.loc,
-                })
+                }
+                const cmtLine = lineStart - 1
+                if (commentHash[cmtLine]) {
+                    msg.comment = commentHash[cmtLine].value.trim()
+                    delete commentHash[cmtLine]
+                }
+                delete commentHash[lineStart]
+                keys.push(msg)
             }
 
             // Check for ignored lines
-            match = commentIgnoreRegExp.exec(comment.value)
-            if (match) {
-                ignoredLines.push(comment.loc.start.line)
+            const ignoreMatch = commentIngoreRegex
+                ? commentIngoreRegex.exec(comment.value)
+                : null
+            if (ignoreMatch) {
+                ignoredLineHash[lineStart] = true
             }
         })
 
         // Look for keys in the source code.
         traverse(ast, {
 
-            CallExpression: (path) => {
+            CallExpression: path => {
 
                 const {node} = path
                 const {loc, callee: {name, type, property}} = node
 
-                const shouldExtract = Boolean(
+                const shouldIgnore = Boolean(
                     // Skip ignored lines
+                    loc && ignoredLineHash[loc.end.line]
+                )
+                const shouldExtract = !shouldIgnore && Boolean(
+                    // Match marker
                     (
-                        !loc ||
-                        !ignoredLines.includes(loc.end.line)
-                    ) &&
+                        type === 'Identifier' &&
+                        markersHash[name]
+                    ) ||
+                    // Include members if enabled
                     (
-                        // Match marker
-                        (
-                            type == 'Identifier' &&
-                            markersHash[name]
-                        ) ||
-                        // Include members if enabled
-                        (
-                            members &&
-                            type == 'MemberExpression' &&
-                            markersHash[property.name]
-                        )
-                        //||markers.some(marker => path.get('callee').matchesPattern(marker))
+                        opts.members &&
+                        type === 'MemberExpression' &&
+                        markersHash[property.name]
                     )
+                    //||markers.some(marker => path.get('callee').matchesPattern(marker))
                 )
                 if (!shouldExtract) {
                     return
                 }
 
-                const apos = argPos < 0
-                    ? node.arguments.length + argPos
-                    : argPos
-                const arg = node.arguments[apos]
+                const aidx = opts.argPos < 0
+                    ? node.arguments.length + opts.argPos
+                    : opts.argPos
+                const arg = node.arguments[aidx]
 
                 this._getKeys(arg).filter(Boolean).forEach(key => {
-                    keys.push({key, loc: node.loc})
+                    const msg = {key, loc: node.loc}
+                    // Extract comments.
+                    const cmts = []
+                    // Check the line above and the current line.
+                    for (let i = -1; i < 1; ++i) {
+                        const line = node.loc.start.line + i
+                        if (commentHash[line]) {
+                            cmts.push(commentHash[line].value.trim())
+                            // Don't add this comment to another key/
+                            delete commentHash[line]
+                        }
+                    }
+                    msg.comment = cmts.join('\n') || null
+
+                    keys.push(msg)
                 })
             },
         })
@@ -359,7 +415,7 @@ class Extractor extends Base {
             }
         }
 
-        if (noInformationTypes.includes(node.type)) {
+        if (NoInformationTypes[node.type]) {
             return ['*'] // We can't extract anything.
         }
 
@@ -369,13 +425,40 @@ class Extractor extends Base {
     }
 
     /**
+     * Copied and adapted from:
+     *
+     *   https://github.com/oliviertassinari/i18n-extract/blob/9110ba51/src/extractFromCode.js
+     *
      * Get the babel options.
      *
      * @return {object}
      */
-    _getBableOpts() {
-        const {parser, babelOptions} = this.opts.parsing
-        return getBabelOpts(parser, babelOptions)
+    _getBabelOpts() {
+        const {parser = Defaults.parser} = this.opts
+
+        const type = typeOf(parser)
+
+        if (type === 'object') {
+            return parser
+        }
+        if (type === 'string') {
+            if (!Parsers[parser]) {
+                throw new ArgumentError(`Unknown parser: '${parser}'`)
+            }
+            return Parsers[parser].babel
+        }
+        throw new ArgumentError(`Option 'parser' must be an object or string, got '${type}'`)
+    }
+
+    _getCommentOpts() {
+        const {comments} = this.opts
+        if (comments === true) {
+            return {...Defaults.comments}
+        }
+        if (typeOf(comments) !== 'object') {
+            return {}
+        }
+        return comments
     }
 }
 
@@ -404,60 +487,38 @@ const AllPlugins = [
 ]
 
 /**
+ * Adapted from:
+ *
+ *   https://github.com/oliviertassinari/i18n-extract/blob/9110ba51/src/extractFromCode.js
+ */
+function makeParserOpts(type) {
+    return {
+        ast: true,
+        parserOpts: {
+            sourceType: 'module',
+            plugins: [type, ...AllPlugins],
+        },
+    }
+}
+
+const Parsers = {
+    flow: {
+        babel: makeParserOpts('flow')
+    },
+    typescript: {
+        babel: makeParserOpts('typescript')
+    },
+}
+
+/**
  * Copied and adapted from:
  *
  *   https://github.com/oliviertassinari/i18n-extract/blob/9110ba51/src/extractFromCode.js
  */
-const Parsers = {
-    flow: {
-        opts: {
-            sourceType: 'module',
-            plugins: ['flow', ...AllPlugins],
-        }
-    },
-    typescript: {
-        opts: {
-            sourceType: 'module',
-            plugins: ['typescript', ...AllPlugins],
-        },
-    },
-    get default() { return Parsers.flow },
-}
-
-/**
- * Copied from:
- *
- *   https://github.com/oliviertassinari/i18n-extract/blob/9110ba51/src/extractFromCode.js
- */
-const noInformationTypes = [
+const NoInformationTypes = arrayHash([
     'CallExpression',
     'Identifier',
     'MemberExpression',
-]
-
-/**
- * Copied and adapted from:
- *
- *   https://github.com/oliviertassinari/i18n-extract/blob/9110ba51/src/extractFromCode.js
- */
-function getBabelOpts(parser, babelOptions) {
-
-    if (babelOptions && parser) {
-        throw new ArgumentError("Can't specify both parser and Babel options!")
-    }
-
-    if (babelOptions) {
-        return babelOptions
-    }
-
-    parser = parser || 'default'
-
-    if (!Parsers[parser]) {
-        const keystr = Object.keys(Parsers).join(', ')
-        throw new ArgumentError(`Parser must be one of: ${keystr}`)
-    }
-
-    return {ast: true, parserOpts: Parsers[parser].opts}
-}
+])
 
 module.exports = Extractor
