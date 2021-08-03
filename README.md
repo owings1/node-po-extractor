@@ -58,85 +58,85 @@ merger.mergePo('locale/fr/messages.po', messages)
 
 These options are common to both the `Extractor` and `Merger`.
 
-- **baseDir** (`string`) default `'.'`: The base directory for resolving file paths.
+- **baseDir** `string` default `'.'`: The base directory for resolving file paths.
     This also determines how to relativize paths in reference comments. If you are running
     as a build script, for example with `npm run ...`, this is typically not needed.
 
-- **context** (`boolean`) default `''`: The message context, `''` is the default context.
+- **context** `boolean` default `''`: The message context, `''` is the default context.
 
-- **gitCheck** (`boolean`) default `true`: Whether to check for uncommitted changes in git before
+- **gitCheck** `boolean` default `true`: Whether to check for uncommitted changes in git before
     writing to a file. Note that this will not check files that are ignored by a `.gitignore` file.
     If you are not writing to a git repository, or you do not have git installed, you must set this
     to `false`.
 
-- **verbose** (`integer`) default `0`: Set a value from `1` to `3` to enable more logging.
+- **verbose** `integer` default `0`: Set a value from `1` to `3` to enable more logging.
 
-- **logger** (`object`) default [`new Logger`][logger]: You can use this to
+- **logger** `object` default [`new Logger`][logger]: You can use this to
     supply a custom logger. It must have the methods: `error`, `warn`, `info`, `log`, and `debug`,
     which accept arbitrary arguments `(...args)` of any type. The default logger uses `console` methods.
 
-- **logging** (`object`): Options to pass to the constructor of the default logger. If you supply a
+- **logging** `object`: Options to pass to the constructor of the default logger. If you supply a
     custom logger, these are ignored. Available keys:
 
-    - **logLevel** (`string|integer`) default `2`: The logLevel. A number from 0-4, or a string
+    - **logLevel** `string|integer` default `2`: The logLevel. A number from 0-4, or a string
     ('info', 'warn', 'error', 'debug'). The environment variables `LOG_LEVEL`, `LOGLEVEL`, and
     `DEBUG` are also checked.
 
-    - **prefix** (`function`): A custom function to provide the prefix. See [logger.js][logger].
+    - **prefix** `function`: A custom function to provide the prefix. See [logger.js][logger].
 
-    - **chalks** (`object`): An object with chalk styes. See [logger.js][logger].
+    - **chalks** `object`: An object with chalk styes. See [logger.js][logger].
 
 ### Extractor options
 
-- **encoding** (`string`) default `'utf-8'`: The default encoding to use when reading source files.
+- **encoding** `string` default `'utf-8'`: The default encoding to use when reading source files.
     Can be overridden for individual files.
 
-- **marker** (`string|array`) default `['i18n', '__']`: The symbol(s) for the i18n translate method
+- **marker** `string|array` default `['i18n', '__']`: The symbol(s) for the i18n translate method
     to extract messages from source.
 
-- **argPos** (`integer`) default `0`: The argument position of the message.
+- **argPos** `integer` default `0`: The argument position of the message.
 
-- **members** (`boolean`) default `false`: Whether to include member calls, e.g. `obj.i18n()`.
+- **members** `boolean` default `false`: Whether to include member calls, e.g. `obj.i18n()`.
 
-- **parser** (`string|object`) default `'flow'`: The babel parser to use, 'typescript' or 'flow'.
+- **parser** `string|object` default `'flow'`: The babel parser to use, 'typescript' or 'flow'.
     Alternatively this can be an object, in which case it will be passed directly to the babel
     `transform` method.
 
-- **comments** (`object`): Options for parsing and extracting comments. Available keys:
+- **comments** `object`: Options for parsing and extracting comments. Available keys:
 
-    - **extract** (`boolean`) default `true`: Extract comments from the preceeding line to include
+    - **extract** `boolean` default `true`: Extract comments from the preceeding line to include
     in the po file. See [this page for more details][po-ref].
 
-    - **keyRegex** (`string|RegExp`) default `/i18n-extract (.+)/`: Regex to extract additional
+    - **keyRegex** `string|RegExp` default `/i18n-extract (.+)/`: Regex to extract additional
     keys from comments.
 
-    - **ignoreRegex** (`string|RegExp`) default `/i18n-ignore-line/`: Regex to tell the extractor
+    - **ignoreRegex** `string|RegExp` default `/i18n-ignore-line/`: Regex to tell the extractor
     to ignore the following line.
 
 ### Merger options
 
-- **replace** (`boolean`) default `false`: Whether to remove translations from the po file that
+- **replace** `boolean` default `false`: Whether to remove translations from the po file that
     are not found in the extracted messages. The default is to keep the messages.
 
-- **sort** (`string|function`) default: `'source'`: How to sort the translations in the po file.
+- **sort** `string|function` default: `'source'`: How to sort the translations in the po file.
     The default is to keep the same order as the source po file, and to sort new translations by `msgid`.
     Other built-in options are `'msgid'`, and `'file'`. Alternatively, you can supply a custom sorting function.
     See below for details.
 
-- **dryrun** (`boolean`) default: `false`: Do everything but write files.
+- **dryrun** `boolean` default: `false`: Do everything but write files.
 
-- **references** (`object`): Options for generating reference comments. See [this page for more details][po-ref].
+- **references** `object`: Options for generating reference comments. See [this page for more details][po-ref].
     Available keys:
 
-    - **enabled** (`boolean`) default `true`: Whether to add line reference comments.
+    - **enabled** `boolean` default `true`: Whether to add line reference comments.
 
-    - **max** (`integer`) default `-1`: Max references to store per translation. A negative value means no limit.
+    - **max** `integer` default `-1`: Max references to store per translation. A negative value means no limit.
 
-    - **perFile** (`integer`) default `-1`: Max references per file for a single translation.
+    - **perFile** `integer` default `-1`: Max references per file for a single translation.
 
-    - **perLine** (`integer`) default `-1`: Max references per comment line.
+    - **perLine** `integer` default `-1`: Max references per comment line.
 
-    - **lineLength** (`integer`) default `-1`: Length at which to start a new comment line. If a single
+    - **lineLength** `integer` default `-1`: Length at which to start a new comment line. If a single
     reference exceeds this value, it will still be added.
 
 -------------
@@ -146,26 +146,26 @@ These options are common to both the `Extractor` and `Merger`.
 ### Merger Events
 
 - **added**: When a new message is found. Receives parameters:
-    - **tran** (`object`): The new translation object being added to the po.
-    - **message** (`object`): The message object extracted from source.
+    - **tran** `object` The new translation object being added to the po.
+    - **message** `object` The message object extracted from source.
 
 - **found**: When a translation exists for a message. Receives parameters:
-    - **tran** (`object`): The existing translation object.
-    - **message** (`object`): The message object.
+    - **tran** `object` The existing translation object.
+    - **message** `object` The message object.
 
 - **changed**: When an existing translation has been modified. Currently the only
     case for this is when comments are being updated. Receives parameters:
-    - **tran** (`object`): The existing translation object.
-    - **message** (`object`): The message object.
-    - **changes** (`array`): An array of change info objects
+    - **tran** `object` The existing translation object.
+    - **message** `object` The message object.
+    - **changes** `array` An array of change info objects
 
 - **missing**: When no message was extracted for a translation that exists in the
     po file. Receives parameters:
-    - **tran** (`object`): The translation object.
+    - **tran** `object` The translation object.
 
 - **beforeSave**: Before a file is written. Receives parameters:
-    - **file** (`string`): The file being written.
-    - **content** (`buffer`): The buffer being written.
+    - **file** `string` The file being written.
+    - **content** `buffer` The buffer being written.
 
 -------------
 
@@ -187,16 +187,12 @@ extractor.addFiles(globs, encoding).getMessages()
 
 **Parameters**:
 
-- **globs** (`array|string`): File path(s) or glob(s).
-- **encoding** (`string`): Optional file encoding. Default is `opts.encoding`.
+- **globs** `array|string` File path(s) or glob(s).
+- **encoding** `string` Optional file encoding. Default is `opts.encoding`.
 
-**Returns**:
+**Returns**: `array` Extracted message objects.
 
-- `array`: Extracted message objects.
-
-**Throws**:
-
-- `ArgumentError`
+**Throws**: `ArgumentError`
 
 ### `extractor.addFile(file, encoding = null)`
 
@@ -204,16 +200,12 @@ Extract messges from a single file and add them to the index.
 
 **Parameters**:
 
-- **file** (`string`): File path.
-- **encoding** (`string`): Optional file encoding. Default is `opts.encoding`.
+- **file** `string` File path.
+- **encoding** `string` Optional file encoding. Default is `opts.encoding`.
 
-**Returns**:
+**Returns**: `self`
 
-- `self`
-
-**Throws**:
-
-- `ArgumentError`
+**Throws**: `ArgumentError`
 
 ### `extractor.addFiles(globs, encoding = null)`
 
@@ -221,32 +213,24 @@ Extract messges from files and add them to the index.
 
 **Parameters**:
 
-- **globs** (`array|string`): File path(s) or glob(s).
-- **encoding** (`string`): Optional file encoding. Default is `opts.encoding`.
+- **globs** `array|string` File path(s) or glob(s).
+- **encoding** `string` Optional file encoding. Default is `opts.encoding`.
 
-**Returns**:
+**Returns**: `self`
 
-- `self`
-
-**Throws**:
-
-- `ArgumentError`
+**Throws**: `ArgumentError`
 
 ### `extractor.getMessages()`
 
 Get all extracted messages.
 
-**Returns**:
-
-- `array`: Extracted message objects.
+**Returns**: `array` Extracted message objects.
 
 ### `extractor.clear()`
 
 Clear all messages.
 
-**Returns**:
-
-- `self`
+**Returns**: `self`
 
 -------------
 
@@ -256,21 +240,14 @@ Update a po file with the extracted messages.
 
 **Parameters**:
 
-- **file** (`string`): The po file path.
-- **messages** (`array`): The extracted messages.
+- **file** `string` The po file path.
+- **messages** `array` The extracted messages.
 
-**Returns**:
+**Returns**: `object` The merge info result.
 
-- `object`: The merge info result.
+**Emits**: **beforeSave**
 
-**Emits**:
-
-- **beforeSave**
-
-**Throws**:
-
-- `ArgumentError`
-- `GitCheckError`
+**Throws**: `ArgumentError`, `GitCheckError`
 
 ### `mergePos(globs, messages)`
 
@@ -278,21 +255,14 @@ Update po files with the extracted messages.
 
 **Parameters**:
 
-- **file** (`array|string`): Po file path(s)/glob(s).
-- **messages** (`array`): The extracted messages.
+- **file** `array|string` Po file path(s)/glob(s).
+- **messages** `array` The extracted messages.
 
-**Returns**:
+**Returns**: `array` The merge info results.
 
-- `array`: The merge info results.
+**Emits**: **beforeSave**
 
-**Emits**:
-
-- **beforeSave**
-
-**Throws**:
-
-- `ArgumentError`
-- `GitCheckError`
+**Throws**: `ArgumentError`, `GitCheckError`
 
 ### `merger.mergePoTo(sourceFile, destFile, messages)`
 
@@ -300,22 +270,15 @@ Update a po file with the extracted messages.
 
 **Parameters**:
 
-- **sourceFile** (`string`): The source po file.
-- **destFile** (`string`): The destination po file.
-- **messages** (`array`): The extracted messages.
+- **sourceFile** `string` The source po file.
+- **destFile** `string` The destination po file.
+- **messages** `array` The extracted messages.
 
-**Returns**:
+**Returns**: `object` The merge info result.
 
-- `object`: The merge info result.
+**Emits**: **beforeSave**
 
-**Emits**:
-
-- **beforeSave**
-
-**Throws**:
-
-- `ArgumentError`
-- `GitCheckError`
+**Throws**: `ArgumentError`, `GitCheckError`
 
 ### `merger.mergePosTo(sourceGlobs, destDir, messages)`
 
@@ -323,22 +286,15 @@ Update a po files with the extracted messages.
 
 **Parameters**:
 
-- **sourceGlobs** (`string`): Po file path(s)/glob(s).
-- **destDir** (`string`): The destination directory.
-- **messages** (`array`): The extracted messages.
+- **sourceGlobs** `string` Po file path(s)/glob(s).
+- **destDir** `string` The destination directory.
+- **messages** `array` The extracted messages.
 
-**Returns**:
+**Returns**: `array` The merge info results.
 
-- `array`: The merge info results.
+**Emits**: **beforeSave**
 
-**Emits**:
-
-- **beforeSave**
-
-**Throws**:
-
-- `ArgumentError`
-- `GitCheckError`
+**Throws**: `ArgumentError`, `GitCheckError`
 
 ### `merger.getMergePoResult(sourceFile, messages)`
 
@@ -368,16 +324,12 @@ Get the result object for merging a po file. The result object is of the form:
 
 **Parameters**:
 
-- **sourceFile** (`string`): The po file path.
-- **messages** (`array`): The extracted messages.
+- **sourceFile** `string` The po file path.
+- **messages** `array` The extracted messages.
 
-**Returns**:
+**Returns**: `object` The merge info result object.
 
-- `object`: The merge info result object.
-
-**Throws**:
-
-- `ArgumentError`
+**Throws**: `ArgumentError`
 
 -------------
 
