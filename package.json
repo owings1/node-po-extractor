@@ -4,7 +4,7 @@
   "description": "extraction util for gettext-po i18n files",
   "main": "index.js",
   "scripts": {
-    "test": "NODE_OPTIONS='--trace-warnings' nyc --reporter=text-summary mocha test/test.js && nyc report --reporter=lcov"
+    "test": "NODE_OPTIONS='--trace-warnings' nyc --reporter=text-summary mocha test/specs/**/*.test.js && nyc report --reporter=lcov"
   },
   "repository": {
     "type": "git",
