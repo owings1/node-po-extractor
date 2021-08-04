@@ -32,8 +32,19 @@ describe('Errors', () => {
 
         const {ArgumentError} = Errors
 
-        it('should construct', function () {
-            new ArgumentError
+        it('should have property isArgumentError=true', function () {
+            const err = new ArgumentError
+            expect(err.isArgumentError).to.equal(true)
+        })
+
+        it('should have property isBaseError=trueisError true', function () {
+            const err = new ArgumentError
+            expect(err.isBaseError).to.equal(true)
+        })
+
+        it('should have property isError=true true', function () {
+            const err = new ArgumentError
+            expect(err.isError).to.equal(true)
         })
     })    
 })

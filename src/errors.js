@@ -22,6 +22,19 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+const Props = require('./static/errors.map')
+
+function addProps(err) {
+    const name = err.name || err.constructor.name
+    const props = Props.index[name]
+    if (!props) {
+        return
+    }
+    Object.entries(props).forEach(([prop, value]) => {
+        err[prop] = value
+    })
+}
+
 class BaseError extends Error {
     constructor(message, ...args) {
         if (Array.isArray(message)) {
@@ -29,6 +42,7 @@ class BaseError extends Error {
         }
         super(message, ...args)
         this.name = this.constructor.name
+        addProps(this)
     }
 }
 
