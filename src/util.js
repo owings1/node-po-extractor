@@ -436,6 +436,18 @@ class Util {
         )
     }
 
+    /**
+     * Sum all numbers in the array.
+     *
+     * @throws {TypeError}
+     *
+     * @param {array} The input array
+     * @return {integer} The result sum
+     */
+    static sumArray(arr) {
+        return arr.reduce((acc, cur) => acc + cur, 0)
+    }
+
     static typeOf(arg) {
         if (arg === null) {
             return 'null'
@@ -450,6 +462,20 @@ class Util {
             return 'object'
         }
         return typeof arg
+    }
+
+    /**
+     * Capitalize the first letter of a string.
+     *
+     * @throws {TypeError}
+     * @param {string} The input string
+     * @return {string} The result string
+     */
+    static ucfirst(str) {
+        if (str == null || !str.length) {
+            return str
+        }
+        return str.substring(0, 1).toUpperCase() + str.substring(1)
     }
 
     /**
