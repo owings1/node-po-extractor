@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "NODE_OPTIONS='--trace-warnings' nyc --reporter=text-summary mocha test/specs/**/*.test.js && nyc report --reporter=lcov",
-    "examples": "scripts/examples",
+    "examples": "scripts/examples run",
     "examples:build": "scripts/examples build",
-    "examples:run": "scripts/examples run"
+    "errors": "scripts/errors info",
+    "errors:build": "scripts/errors build"
   },
   "repository": {
     "type": "git",
@@ -32,6 +33,7 @@
   "homepage": "https://github.com/owings1/node-po-extractor#readme",
   "devDependencies": {
     "chai": "^4.3.4",
+    "diff": "^5.0.0",
     "mocha": "^9.0.3",
     "nyc": "^15.1.0",
     "tmp": "^0.2.1"
