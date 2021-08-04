@@ -7,7 +7,8 @@ const path   = require('path')
 const {basename, dirname, relative, resolve} = path
 
 const {gitFileStatus, mergePlain} = require('../src/util')
-const {Logger} = require('..')
+const Base = require('./util/base')
+const {ScriptError} = require('../src/errors')
 
 const EgScript = 'example.js'
 const Readme = 'README.md'
@@ -16,55 +17,36 @@ const GitStatusOk = ['clean', 'added', 'staged']
 const ExamplesDir = resolve(__dirname, '../examples')
 const TemplateFile = resolve(__dirname, 'res/example-template.md')
 
-class ExamplesScript {
 
-    constructor(argv) {
-        this.logger = new Logger
-        this.isMain = require.main === module
-        argv = argv || []
-        this.task = argv[0] || 'help'
-        const {opts, args} = this.parse(argv.slice(1))
-        this.opts = opts
-        this.args = args
+class ExamplesScript extends Base {
+
+    static flags() {
+        return {
+            quiet: ['-q', '--quiet'],
+            silent: ['-qq', '--silent'],
+            noout: ['-n', '--noout'],
+            force: ['-f', '--force'],
+        }
     }
 
-    run() {
-
-        const {opts, logger} = this
+    setup() {
+        const {cmd, opts, logger} = this
 
         if (opts.silent) {
             logger.logLevel = 0
         } else if (opts.quiet) {
             logger.logLevel = 1
         }
-
-        try {
-            switch (this.task) {
-                case 'run':
-                    this.taskRun()
-                    break
-                case 'build':
-                    this.taskBuild()
-                    break
-                case 'help':
-                    this.taskHelp()
-                    break
-                default:
-                    logger.error('Unknown task:', task)
-                    this.taskHelp()
-                    return this.exit(1)
-                    break
-            }
-        } catch (err) {
-            this.exit(err)
-        }
+        super.setup()
     }
 
-    taskHelp() {
-        this.logger.info('Usage: node examples.js <task> [options]')
+    help() {
+        const {logger} = this
+        logger.info('Usage: examples <cmd> [options]')
+        logger.info('Available commands: run, build, help')
     }
 
-    taskRun() {
+    cmd_run() {
         const {logger, opts, args} = this
         let examples = this.listNames(args)
         logger.info('Processing', examples.length, 'examples')
@@ -79,7 +61,7 @@ class ExamplesScript {
         logger.info('Done')
     }
 
-    taskBuild() {
+    cmd_build() {
 
         const {logger, opts, args} = this
         const template = this.readTemplate()
@@ -111,48 +93,6 @@ class ExamplesScript {
         })
 
         logger.info('Done')
-    }
-
-    parse(raw) {
-        raw = raw.slice(0)
-        const checkOpt = (...strs) => {
-            if (raw.some(it => strs.includes(it))) {
-                raw = raw.filter(it => !strs.includes(it))
-                return true
-            }
-            return false
-        }
-        const opts = {
-            quiet: checkOpt('-q', '--quiet'),
-            silent: checkOpt('-qq', '--silent'),
-            noout: checkOpt('-n', '--noout'),
-            force: checkOpt('-f', '--force'),
-        }
-        let args
-        let idx = raw.indexOf('--')
-        if (idx > -1) {
-            args = raw.slice(idx + 1)
-        } else {
-            args = raw.filter(arg => arg[0] != '-')
-        }
-        return {opts, args}
-    }
-
-    exit(code = 0) {
-        if (this.isMain) {
-            if (code instanceof Error) {
-                this.logger.error(code)
-                code = 2
-            }
-            process.exit(code)
-            return
-        }
-        if (code instanceof Error) {
-            throw code
-        }
-        if (code !== 0) {
-            throw new ScriptError(`examples.js script exit code ${code}`)
-        }
     }
 
     listNames(names) {
@@ -232,16 +172,9 @@ class ExamplesScript {
     }
 }
 
-
-class ScriptError extends Error {
-    constructor(...args) {
-        super(...args)
-        this.name = this.constructor.name
-    }
-}
+module.exports = ExamplesScript
 
 if (require.main === module) {
-    new ExamplesScript(process.argv.slice(2)).run()
+    new module.exports(true, process.argv.slice(2)).run()
 }
 
-module.exports = ExamplesScript

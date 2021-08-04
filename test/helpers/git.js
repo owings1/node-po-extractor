@@ -12,7 +12,7 @@ class GitError extends Error {
     }
 }
 
-module.exports = function git(cwd, opts) {
+module.exports = function create(cwd, opts) {
 
     function self(...args) {
         const result = chproc.spawnSync('git', args, self.sopts)
