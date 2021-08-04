@@ -17,6 +17,8 @@ const GitStatusOk = ['clean', 'added', 'staged']
 const ExamplesDir = resolve(__dirname, '../examples')
 const TemplateFile = resolve(__dirname, 'res/example-template.md')
 
+const PoBeginTag = '<po-content>'
+const PoEndTag = '</po-content>'
 
 class ExamplesScript extends Base {
 
@@ -79,9 +81,16 @@ class ExamplesScript extends Base {
 
         const outputs = {}
 
+        const env = {
+            PRETTY_SCRIPT_BEGIN    : PoBeginTag,
+            PRETTY_SCRIPT_END      : PoEndTag,
+            PRETTY_SCRIPT_NOINDENT : '1',
+        }
+        const sopts = {env}
+
         examples.forEach(example => {
             logger.info('Running', {example})
-            const {stdout} = this.runExample(example)
+            const {stdout} = this.runExample(example, sopts)
             outputs[example] = stdout.toString('utf-8')
         })
 
@@ -114,7 +123,37 @@ class ExamplesScript extends Base {
     }
 
     buildReadme(template, name, output) {
-        const pre = output.split('\n').map(line => '    ' + line).join('\n')
+        const lines = []
+        let isCodeOpen = false
+        output.split('\n').forEach(line => {
+            if (line === PoBeginTag) {
+                if (isCodeOpen) {
+                    lines.push('```')
+                }
+                lines.push('```po')
+                isCodeOpen = true
+                return
+            }
+            if (line === PoEndTag) {
+                if (isCodeOpen) {
+                    lines.push('```')
+                    isCodeOpen = false
+                }
+                return
+            }
+            if (!isCodeOpen && line) {
+                lines.push('```')
+                isCodeOpen = true
+                lines.push(line)
+                return
+            }
+            lines.push(line)
+        })
+        if (isCodeOpen) {
+            lines.push('```')
+            isCodeOpen = false
+        }
+        const pre = lines.join('\n')
         return template.replace('{name}', name).replace('{output}', pre)
     }
 
@@ -145,14 +184,13 @@ class ExamplesScript extends Base {
 
     runExample(name, sopts = {}) {
         const {logger} = this
+        const beginTag = this.cmd === 'build' ? PoBeginTag : null
+        const endTag   = this.cmd === 'build' ? PoEndTag : null
         sopts = mergePlain(
             {
                 // 10K max
                 maxBuffer: 1024 * 10,
-                env: {
-                    ...process.env,
-                    //FORCE_COLOR: '2',
-                },
+                env: {...process.env},
             },
             sopts,
         )

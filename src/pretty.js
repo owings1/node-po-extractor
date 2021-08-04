@@ -36,6 +36,10 @@ Defaults.chalks.po = {
 const Q = '"'
 const BraceRegex = /^\[(0|[1-9]+[0-9]*)\]$/
 
+const ContentBeginLine = process.env.PRETTY_SCRIPT_BEGIN || null
+const ContentEndLine   = process.env.PRETTY_SCRIPT_END || null
+const SkipIndent       = Boolean(process.env.PRETTY_SCRIPT_NOINDENT)
+
 function quoteIdx(str) {
     if (str[0] === Q) {
         return 0
@@ -205,9 +209,14 @@ class Pretty {
 
         }).filter(line => line !== null)
 
-        return lines.map(line => {
-            return ''.padEnd(opts.indent || 0, ' ') + line
+        const indent = SkipIndent ? 0 : +opts.indent || 0
+
+        const beginTag = ContentBeginLine ? ContentBeginLine + '\n' : ''
+        const endTag   = ContentEndLine   ? '\n' + ContentEndLine   : ''
+        const body = lines.map(line => {
+            return ''.padEnd(indent, ' ') + line
         }).join('\n')
+        return beginTag + body + endTag
     }
 
     _poComment(raw) {
