@@ -76,10 +76,6 @@ const Defaults = {
     },
 }
 
-function globsNotEmpty(value) {
-    return Boolean(value.length) || 'Argument (globs) cannot be empty'
-}
-
 class Merger extends Base {
 
     /**
@@ -150,8 +146,7 @@ class Merger extends Base {
      */
     mergePos(globs, messages) {
         checkArg(
-            globs    , 'globs'    , 'string|array',
-            globs    , 'globs'    , globsNotEmpty,
+            globs    , 'globs'    , Base.checkGlobArg,
             messages , 'messages' , 'array',
         )
         const files = this.glob(globs)
@@ -214,8 +209,7 @@ class Merger extends Base {
      */
     mergePosTo(sourceGlob, destDir, messages) {
         checkArg(
-            sourceGlob , 'sourceGlob' , 'string|array',
-            sourceGlob , 'sourceGlob' , globsNotEmpty,
+            sourceGlob , 'sourceGlob' , Base.checkGlobArg,
             destDir    , 'destDir'    , 'string',
             messages   , 'messages'   , 'array',
         )

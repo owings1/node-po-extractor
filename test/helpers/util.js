@@ -14,12 +14,14 @@ function getError(cb) {
     }
     throw new GetErrorError('No error thrown')
 }
+
 const Git = require('./git')
 const Util = require('../../src/util')
+
 module.exports = {
     ger: getError,
     getError,
     Git,
     git : Git,
-    merge : Util.mergePlain,
+    merge : Util.mergeDefault,
 }

@@ -32,12 +32,12 @@ describe('Extractor', () => {
     const Extractor = require('../../src/extractor')
 
     beforeEach(function () {
+        this.opts = {
+            baseDir: resolve(__dirname, '../fixtures/default'),
+            logging: {logLevel: 1},
+        }
         this.create = function (opts) {
-            opts = merge({
-                baseDir: resolve(__dirname, '../fixtures/default'),
-                logging: {logLevel: 1},
-            },  opts)
-            return new Extractor(opts)
+            return new Extractor(merge(this.opts, opts))
         }
     })
 
@@ -197,6 +197,39 @@ describe('Extractor', () => {
         it('should accept object for parser', function () {
             const parser = new Extractor()._getBabelOpts()
             this.create({parser})
+        })
+
+        it('should set logLevel from opts.logging.logLevel', function () {
+            const opts = {logging: {logLevel: -1}}
+            const extractor = this.create(opts)
+            expect(extractor.logLevel).to.equal(-1)
+        })
+
+        describe('custom logger', () => {
+
+            it('should allow a specific instance of Logger and keep reference', function () {
+                const {logger} = this.create()
+                const extractor = this.create({logger})
+                expect(extractor.logger).to.equal(logger)
+            })
+
+            it('should allow a plain object as custom logger and keep reference', function () {
+                const noop = () => {}
+                const logger = {
+                    info: noop,
+                    debug: noop,
+                    warn: noop,
+                    error: noop,
+                    snark: noop,
+                    log: noop
+                }
+                this.opts.logger = logger
+                const e1 = this.create()
+                expect(e1.logger).to.equal(logger)
+                delete this.opts.logger
+                const e2 = this.create({logger})
+                expect(e2.logger).to.equal(logger)
+            })
         })
     })
 

@@ -177,6 +177,78 @@ class Util {
         return value > max
     }
 
+    static createMerger(opts) {
+        opts = {
+            name: null,
+            argFilter: Boolean,
+            ignoreKeys: null,
+            customMerge: null,
+            isMergeableObject: defaultIsMergable,
+            ...opts
+        }
+        if (opts.ignoreKeys && opts.customMerge) {
+            throw new ArgumentError(`Cannot specify both ignoreKeys and customMerge`)
+        }
+        Util.checkArg(
+            opts.argFilter,         'argFilter',         'function|null',
+            opts.ignoreKeys,        'ignoreKeys',        'array|null',
+            opts.isMergeableObject, 'isMergeableObject', 'function|null',
+            opts.customMerge,       'customMerge',       'function|null',
+            opts.name,              'name',              'string|null',
+        )
+
+        function defaultIsMergable (obj) {
+            return Util.isPlainObject(obj) && !Util.isFunction(obj.info)
+        }
+        function chooseb(a, b) {
+            return b
+        }
+        function noFilter() {
+            return true
+        }
+        const filter = opts.argFilter || noFilter
+
+        const merger = function customMerger(...args) {
+            args = args.filter(filter)
+            return deepmerge.all(args, opts)
+        }
+
+        const {ignoreKeys} = opts
+        if (ignoreKeys) {
+            const keyHash = Util.arrayHash(ignoreKeys)
+            opts.customMerge = function checkKeyChooseb(key) {
+                if (keyHash[key]) {
+                    return chooseb
+                }
+            }
+            Object.defineProperty(merger, 'getIgnoreKeysHashCopy', {
+                value: function keyHashView () {
+                    return Util.arrayHash(ignoreKeys)
+                }
+            })
+        } else if (opts.customMerge) {
+            Object.defineProperties(merger, {
+                isCustomMerge: {
+                    value: true,
+                },
+                customMergeProxy: {
+                    value: function customMergeProxy(key) {
+                        return opts.customMerge(key)
+                    },
+                },
+                customMergeName: {
+                    value: opts.customMerge.name,
+                },
+            })
+        }
+
+        if (opts.name) {
+            Object.defineProperty(merger, 'name', {value: opts.name})
+        }
+
+        return merger
+    }
+
     static exec(cmd, args, opts) {
         args = args || []
         opts = opts || {}
@@ -279,7 +351,7 @@ class Util {
             return false
         }
         // If has modified constructor
-        ctor = o.constructor;
+        ctor = o.constructor
         if (ctor === undefined) {
             return true
         }
@@ -494,5 +566,13 @@ class Util {
         return target
     }
 }
+
+Object.defineProperty(Util, 'mergeDefault', {
+    value: Util.createMerger({
+        cast: false,
+        name:'MergeDefault',
+        ignoreKeys: ['logger'],
+    })
+})
 
 module.exports = Util

@@ -26,7 +26,7 @@ Defaults.chalks.po = {
     message: {
         attr  : chalk.keyword('orange'),
         brace : chalk.grey,
-        index : chalk.cyan,
+        index : chalk.hex('#884444'),
         quote : chalk.grey,
         value : chalk.green,
     },

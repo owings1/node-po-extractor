@@ -44,13 +44,12 @@ describe('Merger', () => {
         const fixtureDir = resolve(__dirname, '../fixtures/default')
         fse.copySync(fixtureDir, this.baseDir)
         this.git = Git(this.baseDir).initDefault()
+        this.opts = {
+            baseDir: this.baseDir,
+            logging: {logLevel: 1},
+        }
         this.create = function (opts) {
-            opts = merge({
-                baseDir: this.baseDir,
-                //dryRun: true,
-                //gitCheck: false,
-                logging: {logLevel: 1},
-            },  opts)
+            opts = merge(this.opts,  opts)
             return new Merger(opts)
         }
         this.read = function (file) {
@@ -63,8 +62,7 @@ describe('Merger', () => {
     })
 
     beforeEach(function () {
-        
-        
+
     })
 
     describe('#getMergePoResult', () => {
@@ -162,6 +160,15 @@ describe('Merger', () => {
                 expect(trans).to.have.key('m1')
                 expect(content).to.contain('msgid "m1"')
             })
+
+            it('should throw GitCheckError when po file is modified', function () {
+                const file = 'locale/en.po'
+                this.git.write(file, this.read(file) + '\n')
+                const merger = this.create()
+                merger.logLevel = -1
+                const err = ger(() => merger.mergePo(file, []))
+                expect(err.isGitCheckError).to.equal(true)
+            })
         })
 
         describe('#mergePos', () => {
@@ -207,5 +214,13 @@ describe('Merger', () => {
             })
         })
     })
-    
+
+    describe('options', () => {
+
+        it('should set logLevel from opts.logging.logLevel', function () {
+            this.opts.logging.logLevel = -1
+            const merger = this.create()
+            expect(merger.logLevel).to.equal(-1)
+        })
+    })
 })

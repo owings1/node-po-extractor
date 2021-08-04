@@ -76,9 +76,6 @@ const {
     checkArg,
     lget,
     lset,
-    locHash,
-    locToObject,
-    relPath,
     resolveSafe,
     typeOf,
 } = require('./util')
@@ -146,13 +143,8 @@ class Extractor extends Base {
      * @return {self}
      */
     addFiles(globs, encoding = null) {
-        const {opts} = this
-        const {baseDir, context} = this.opts
-        globs = castToArray(globs).map(glob => resolveSafe(baseDir, glob))
-        checkArg(globs, 'globs', it => (
-            Boolean(it.length) || 'Argument (globs) cannot be empty'
-        ))
-        const files = globby.sync(globs)
+        checkArg(globs, 'globs', Base.checkGlobArg)
+        const files = this.glob(globs)
         this.logger.info('Extracting from', files.length, 'files')
         let count = 0
         files.forEach(file => {

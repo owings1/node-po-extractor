@@ -28,7 +28,7 @@ const {
     castToArray,
     getOrCallBound,
     isPlainObject,
-    mergePlain,
+    mergeDefault,
     parseStack,
 } = require('./util')
 
@@ -48,33 +48,32 @@ const LevelNames = [
     'debug',
 ]
 
-function getLevelNumber(value) {
-    if (typeof value == 'string') {
-        value = value.toLowerCase()
-    }
-    if (value in LevelNums) {
-        return LevelNums[value]
-    }
-    if (value in LevelNames) {
-        return +value
-    }
-    return Defaults.logLevel
-}
-
 const Defaults = {}
 
+/**
+ * The object to delegate writing to, default is the node console. This object
+ * must be able to process arbitrary arguments of any type.
+ */
 Defaults.console = console
 
+/**
+ * The default log level. If the `DEBUG` environment variable is set, then the
+ * default is debug (4). Then the environment variables `LOG_LEVEL` and `LOGLEVEL`
+ * are checked. Otherwise the default is info (2).
+ */
 Defaults.logLevel = getLevelNumber(
     process.env.DEBUG
-        ? 4
+        ? 'debug'
         : (
             process.env.LOG_LEVEL ||
             process.env.LOGLEVEL ||
-            2
+            'info'
         )
 )
 
+/**
+ * The chalk color styles to use.
+ */
 Defaults.chalks = {
     brace: chalk.grey,
     error: {
@@ -106,6 +105,12 @@ Defaults.chalks = {
     },
 }
 
+/**
+ * Log prefix function.
+ *
+ * @param {string} The log level, error, warn, info, log, or debug.
+ * @return {string|array} The formatted prefix message(s)
+ */
 Defaults.prefix = function (level) {
     const {chalks} = this
     if (level == 'info') {
@@ -118,6 +123,13 @@ Defaults.prefix = function (level) {
     ].join('')
 }
 
+/**
+ * Logging format function.
+ *
+ * @param {string} The log level, error, warn, info, log, or debug.
+ * @param {array} The arguments, any type.
+ * @return {string|array} The formatted message(s)
+ */
 Defaults.format = function (level, args) {
     const chlk = this.chalks[level]
     let hasError = false
@@ -148,7 +160,7 @@ Defaults.format = function (level, args) {
 class Logger {
 
     constructor(opts) {
-        this.opts = mergePlain(Defaults, opts)
+        this.opts = mergeDefault(Defaults, opts)
         LevelNames.forEach(name =>
             this[name] = this.level.bind(this, name)
         )
@@ -198,6 +210,22 @@ class Logger {
         }
         return lines.join('\n')
     }
+}
+
+function getLevelNumber(value) {
+    if (typeof value === 'string') {
+        value = value.toLowerCase()
+    }
+    if (value in LevelNums) {
+        return LevelNums[value]
+    }
+    if (value in LevelNames) {
+        return +value
+    }
+    if (value < 0) {
+        return -1
+    }
+    return Defaults.logLevel
 }
 
 module.exports = Logger

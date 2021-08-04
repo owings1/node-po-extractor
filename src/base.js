@@ -34,9 +34,10 @@ const {
     castToArray,
     checkArg,
     gitFileStatus,
-    mergePlain,
+    mergeDefault,
     relPath,
     resolveSafe,
+    typeOf,
 } = require('./util')
 const Logger = require('./logger')
 const {UnsavedChangesError} = require('./errors')
@@ -57,8 +58,7 @@ class Base extends EventEmitter {
 
     constructor(...opts) {
         super()
-        // TODO: skip merging logger even if it is a plain object.
-        this.opts = mergePlain(Defaults, ...opts)
+        this.opts = mergeDefault(Defaults, ...opts)
         if (!this.logger) {
             this.logger = new Logger(this.opts.logging)
         }
@@ -175,6 +175,11 @@ class Base extends EventEmitter {
         } else {
             this.opts.logging.logLevel = level
         }
+    }
+
+    static checkGlobArg(value) {
+        checkArg(value, 'globs', 'string|array')
+        return Boolean(value.length) || 'Argument (globs) cannot be empty'
     }
 
     /**
