@@ -16,6 +16,9 @@ module.exports = function create(cwd, opts) {
 
     function self(...args) {
         const result = chproc.spawnSync('git', args, self.sopts)
+        if (result.error) {
+            throw result.error
+        }
         let {status, stdout, stderr} = result
         stdout = stdout ? stdout.toString('utf-8') : ''
         stderr = stderr ? stderr.toString('utf-8') : ''
