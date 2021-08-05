@@ -8,5 +8,6 @@ test:
   tags:
     - docker
   script:
-    - npm install
+    - apk add git
+    - npm ci
     - npm test
