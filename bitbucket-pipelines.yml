@@ -13,5 +13,6 @@ pipelines:
             caches:
               - node
             script:
-              - npm install
+              - apk add git
+              - npm ci
               - FORCE_COLOR=2 npm test
