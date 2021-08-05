@@ -1,20 +1,27 @@
 // examples/members
 const {Extractor, Merger, Pretty} = require('../..')
 
-const hr = '\n------------------\n'
-const pretty = new Pretty({headers: false, indent: 2})
+const {relative, resolve} = require('path')
+const baseDir = __dirname
+const thisFile = relative(resolve(baseDir, '../..'), __filename)
+const pretty = new Pretty()
+const hr = pretty.hr(64)
+const {log} = console
 
-function runCase(title, opts) {
-    console.log(hr, title, hr, 'opts:', opts, hr)
-    const baseDir = __dirname
+function example(title, opts) {
+    log(hr)
+    log('File    :', thisFile)
+    log('Example :', title)
+    log('Options :', opts)
+    log(hr)
     opts = {baseDir, ...opts}
     const msgs = new Extractor(opts).extract('code.js')
     const res = new Merger(opts).getMergePoResult('messages.po', msgs)
-    console.log()
-    console.log(pretty.po(res.content))
-    console.log()
+    log(hr)
+    log(pretty.po(res.content))
+    log()
 }
 
-runCase('Without members', {members: false})
+example('Without members', {members: false})
 
-runCase('With members', {members: true})
+example('With members', {members: true})

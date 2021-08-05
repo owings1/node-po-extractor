@@ -6,22 +6,25 @@ node example.js
 
 ## Output:
 
-
 ```
-------------------
- Without comments 
-------------------
- opts: { comments: { extract: false, keyRegex: null, ignoreRegex: null } } 
-------------------
-
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+File    : examples/comments/example.js
+Example : Without comments
+Options : { comments: { extract: false, keyRegex: null, ignoreRegex: null } }
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ❯ Extracting from 1 files
 ❯ Extracted 8 key instances
 ❯ Reading file: messages.po
 ❯ Processing po { context: '', language: 'fr', translations: 1 }
 ❯ Totals { added: 7, found: 1, changed: 1, missing: 0 }
-
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 ```po
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=utf-8\n"
+"Language: fr\n"
+
 # Translator comment
 #: code.js:6
 msgid "Message 1"
@@ -56,28 +59,31 @@ msgid "Message X"
 msgstr ""
 ```
 
-
 ```
-------------------
- With comments 
-------------------
- opts: {
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+File    : examples/comments/example.js
+Example : With comments
+Options : {
   comments: {
     extract: true,
     keyRegex: /i18n-extract (.+)/,
     ignoreRegex: /i18n-ignore-line/
   }
-} 
-------------------
-
+}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ❯ Extracting from 1 files
 ❯ Extracted 6 key instances
 ❯ Reading file: messages.po
 ❯ Processing po { context: '', language: 'fr', translations: 1 }
 ❯ Totals { added: 5, found: 1, changed: 1, missing: 0 }
-
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 ```po
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=utf-8\n"
+"Language: fr\n"
+
 # Translator comment
 #: code.js:6
 #. Comment for Message 1 above

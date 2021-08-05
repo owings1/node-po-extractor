@@ -24,16 +24,17 @@ class ExamplesScript extends Base {
 
     static flags() {
         return {
-            quiet: ['-q', '--quiet'],
+            quiet:  ['-q', '--quiet'],
             silent: ['-qq', '--silent'],
-            noout: ['-n', '--noout'],
-            force: ['-f', '--force'],
+            noout:  ['-n', '--noout'],
+            force:  ['-f', '--force'],
+            print:  ['-p', '--print'],
+            dryrun: ['-t', '--test', '--dryrun'],
         }
     }
 
     setup() {
         const {cmd, opts, logger} = this
-
         if (opts.silent) {
             logger.logLevel = 0
         } else if (opts.quiet) {
@@ -82,9 +83,10 @@ class ExamplesScript extends Base {
         const outputs = {}
 
         const env = {
-            PRETTY_SCRIPT_BEGIN    : PoBeginTag,
-            PRETTY_SCRIPT_END      : PoEndTag,
-            PRETTY_SCRIPT_NOINDENT : '1',
+            PRETTY_FORCE_BEGINTAG : PoBeginTag,
+            PRETTY_FORCE_ENDTAG   : PoEndTag,
+            PRETTY_FORCE_INDENT   : '0',
+            //PRETTY_FORCE_HRFIXED  : 'sakdfjhaklsdf',
         }
         const sopts = {env}
 
@@ -92,13 +94,21 @@ class ExamplesScript extends Base {
             logger.info('Running', {example})
             const {stdout} = this.runExample(example, sopts)
             outputs[example] = stdout.toString('utf-8')
+            const method = opts.print ? 'info' : 'debug'
+            logger[method]('Script output:\n' + outputs[example])
         })
 
         examples.forEach(example => {
             const file = resolve(ExamplesDir, example, Readme)
             const content = this.buildReadme(template, example, outputs[example])
+            const method = opts.print ? 'info' : 'debug'
+            logger[method]('Built readme:\n' + content)
             logger.info('Writing', relative(ExamplesDir, file))
-            fs.writeFileSync(file, content)
+            if (opts.dryrun) {
+                logger.warn('Not writing in dryrun mode.')
+            } else {
+                fs.writeFileSync(file, content)
+            }
         })
 
         logger.info('Done')

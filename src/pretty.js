@@ -1,21 +1,64 @@
+/**
+ * node-po-extractor
+ *
+ * Copyright (C) 2021 Doug Owings
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+const Logger = require('./logger')
+
 const chalk = require('chalk')
-const {arrayHash, mergePlain} = require('./util')
+const {arrayHash, mergePlain, revalue, stripAnsi} = require('./util')
 
 const Defaults = {
     // For toString() on a buffer.
     encoding : 'utf-8',
-    header   : true,
-    indent   : 0,
-    chalks   : {},
+    headers  : true,
+    // 'before', 'after'/true
+    warnings : false,
+    indent   : +process.env.PRETTY_INDENT || 0,
+    beginTag : process.env.PRETTY_BEGINTAG,
+    endTag   : process.env.PRETTY_ENDTAG,
+    dash     : process.env.PRETTY_DASH || '\u2501',
+}
+
+Defaults.chalks = {
+    hr: chalk.grey,
+    warn: {
+        prefix : chalk.keyword('pink'),
+        line   : chalk.grey,
+        num    : chalk.cyan,
+        colon  : chalk,
+        paren  : chalk.grey,
+        msg    : chalk.italic.keyword('orange'),
+    },
 }
 
 Defaults.chalks.po = {
+    preamble: chalk.italic.grey,
     header: {
-        before : chalk.grey,
-        quote  : chalk.white,
+        quote  : chalk,
         name   : chalk.red,
-        colon  : chalk.white,
+        colon  : chalk,
         value  : chalk.cyan,
+        break  : chalk.grey,
     },
     comment: {
         prefix  : chalk.grey,
@@ -24,7 +67,7 @@ Defaults.chalks.po = {
         flag    : chalk.blue,
     },
     message: {
-        attr  : chalk.keyword('orange'),
+        attr  : chalk.hex('#884444'),
         brace : chalk.grey,
         index : chalk.hex('#884444'),
         quote : chalk.grey,
@@ -35,24 +78,36 @@ Defaults.chalks.po = {
 
 const Q = '"'
 const BraceRegex = /^\[(0|[1-9]+[0-9]*)\]$/
+const QuoteRegex = /^(.*?[^\\])"/
 
-const ContentBeginLine = process.env.PRETTY_SCRIPT_BEGIN || null
-const ContentEndLine   = process.env.PRETTY_SCRIPT_END || null
-const SkipIndent       = Boolean(process.env.PRETTY_SCRIPT_NOINDENT)
-
-function quoteIdx(str) {
-    if (str[0] === Q) {
-        return 0
+function forceEnv(opts, env) {
+    const values = {}
+    if ('PRETTY_FORCE_BEGINTAG' in env) {
+        values.beginTag = env.PRETTY_FORCE_BEGINTAG
     }
-    const match = str.match(/^(.*?[^\\])"/)
-    const idx = match ? match[1].length : -1
-    return idx
+    if ('PRETTY_FORCE_ENDTAG' in env) {
+        values.endTag = env.PRETTY_FORCE_ENDTAG
+    }
+    if ('PRETTY_FORCE_INDENT' in env) {
+        values.indent = +env.PRETTY_FORCE_INDENT
+    }
+    if ('PRETTY_FORCE_HRFIXED' in env) {
+        values.hrFixed = env.PRETTY_FORCE_HRFIXED
+    }
+    if ('PRETTY_FORCE_DASH' in env) {
+        values.dash = env.PRETTY_FORCE_DASH
+    }
+    Object.defineProperties(opts, revalue(values, value => ({
+        get() { return value }
+    })))
 }
 
 class Pretty {
 
     constructor(opts) {
         this.opts = mergePlain(Defaults, opts)
+        forceEnv(this.opts, process.env)
+        this.logger = new Logger(this.opts.logging)
     }
 
     get chalks() {
@@ -61,212 +116,441 @@ class Pretty {
 
     po(content) {
 
-        const chlk = this.chalks.po
-        const {opts} = this
-
         if (Buffer.isBuffer(content)) {
-            content = content.toString(opts.encoding)
+            content = content.toString(this.opts.encoding)
         }
 
-        let stage = 'preHeaders'
+        const state = {
+            input: {
+                text  : content,
+                lines : content.split('\n'),
+            },
+            output: {lines: [], warns: []},
+        }
 
-        let preTodo = ['msgid ""', 'msgstr ""']
+        this._poInit(state)
 
-        const lines = content.split('\n').map(raw => {
+        state.input.lines.forEach((raw, i) => {
+            const n = i + 1
 
             const trimmed = raw.trim()
             const endws = raw.substring(trimmed.length)
+            const isq = raw[0] === Q
+            const iscmt = raw[0] === '#'
+            const warns = []
+            const w = (...msgs) => warns.push(sp(msgs))
+            const props = {raw, trimmed, endws, isq, iscmt, warns, w}
+            state.line = {}
+            Object.defineProperties(state.line, revalue(props, value => ({
+                get() { return value }
+            })))
 
-            if (stage == 'preHeaders') {
-                if (raw[0] === Q) {
-                    stage = 'headers'
-                } else {    
-                    if (preTodo.includes(trimmed)) {
-                        preTodo = preTodo.filter(it => it !== trimmed)
-                        if (!preTodo.length) {
-                            stage = 'headers'
-                        }
-                        if (opts.headers) {
-                            return chlk.header.before(raw)
-                        }
-                        return null
-                    }
-                }
+            const linef = this._poLine(state)
+            if (linef !== null) {
+                state.output.lines.push(linef)
             }
 
-            if (stage === 'headers') {
-                // Parse headers
-                if (trimmed === '') {
-                    // Blank line means end of headers.
-                    stage = 'body'
-                    return opts.headers ? raw : null
-                }
-                if (!opts.headers) {
-                    return null
-                }
-                if (raw[0] !== Q) {
-                    return chlk.unknown(raw)
-                }
-                const qi = quoteIdx(raw.substring(1))
-                if (qi < 0 || qi !== trimmed.length - 2) {
-                    return chlk.unknown(raw)
-                }
-                const parts = raw.substring(1, qi + 1).split(': ')
-                if (parts.length !== 2) {
-                    return chlk.unknown(raw)
-                }
-                const ch = chlk.header
-                return [
-                    ch.quote(Q),
-                    ch.name(parts[0]),
-                    ch.colon(':') + ' ',
-                    ch.value(parts[1]),
-                    ch.quote(Q),
-                    endws,
-                ].join('')
-            }
+            warns.forEach(msg => {
+                state.output.warns.push(this._warnf(msg, n))
+            })
+        })
 
-            if (stage !== 'body' || trimmed === '') {
-                return raw
-            }
-
-            const ch = chlk.message
-
-            if (raw[0] === '#') {
-                // A comment.
-                return this._poComment(raw)
-            }
-
-            if (raw[0] === Q) {
-                // A quoted string "..." on a line.
-                const qi = quoteIdx(raw.substring(1))
-                if (qi < 0 || qi !== trimmed.length - 2) {
-                    return chlk.unknown(raw)
-                }
-                return [
-                    ch.quote(Q),
-                    ch.value(raw.substring(1, qi + 1)),
-                    ch.quote(Q),
-                    endws,
-                ].join('')
-            }
-
-            // attr "value"
-
-            // Message attr
-            const attr = PoAttrs.find(attr => raw.indexOf(attr) === 0)
-            const si = raw.indexOf(' ')
-            if (!attr || si < 0) {
-                // Unknown attr, or no space.
-                return raw
-            }
-            // Format the attr string.
-            let attrf
-            const astr = raw.substring(0, si)
-            if (astr === attr) {
-                // Just the attr name.
-                attrf = ch.attr(astr)
-            } else if (attr === 'msgstr') {
-                // Check for brace [] expression.
-                const match = astr.substring(attr.length)
-                    .match(BraceRegex)
-                if (match) {
-                    attrf = [
-                        ch.attr(attr),
-                        ch.brace('['),
-                        ch.index(match[1]),
-                        ch.brace(']'),
-                    ].join('')
-                }
-            }
-            if (!attrf) {
-                return raw
-            }
-
-            // Message attr string value
-            const vraw = raw.substring(si + 1)
-            const qi1 = quoteIdx(vraw)
-            if (qi1 < 0) {
-                return [attrf, vraw].join(' ')
-            }
-            // Is there a non-space char between the attr and the first quote?
-            const bwws = vraw.substring(0, qi1) + ' '
-            if (bwws.trim() !== '') {
-                return [attrf, chlk.unknown(vraw)].join(' ')
-            }
-            const qi2 = quoteIdx(vraw.substring(qi1 + 1))
-            if (qi2 < 0) {
-                return [attrf, chlk.unknown(vraw)].join(' ')
-            }
-            return [
-                attrf,
-                bwws,
-                ch.quote(Q),
-                ch.value(vraw.substring(qi1 + 1, qi2 + 1)),
-                ch.quote(Q),
-                endws,
-            ].join('')
-
-        }).filter(line => line !== null)
-
-        const indent = SkipIndent ? 0 : +opts.indent || 0
-
-        const beginTag = ContentBeginLine ? ContentBeginLine + '\n' : ''
-        const endTag   = ContentEndLine   ? '\n' + ContentEndLine   : ''
-        const body = lines.map(line => {
-            return ''.padEnd(indent, ' ') + line
-        }).join('\n')
-        return beginTag + body + endTag
+        return this._render(state)
     }
 
-    _poComment(raw) {
-        const chlk = this.chalks.po.comment
-        const typeHash = {':': 'ref', ',': 'flag'}
-        const type = typeHash[raw[1]] || 'default'
-        if (type === 'default') {
-            return chlk.default(raw)
+    hr(len = 40, isIndent = false) {
+        const {opts} = this
+        if (!Number.isInteger(len)) {
+            len = 40
         }
-        let line = chlk.prefix(raw.substring(0, 2))
+        let indent = 0
+        if (isIndent) {
+            if (Number.isFinite(isIndent) && isIndent > 0) {
+                indent = isIndent
+            } else {
+                indent = +opts.indent || 0
+            }
+        }
+        let max
+        try {
+            max = process.stdout.columns
+        } catch (err) {
+            this.logger.warn('Failed to get process.stdout.columns', err)
+        }
+        if (!Number.isInteger(max)) {
+            max = 80
+        }
+        max -= indent
+        if (len < 0) {
+            len += max
+        }
+        len = Math.min(len, max)
+        if (len < 1) {
+            return ''
+        }
+        let hrf
+        if (opts.hrFixed) {
+            hrf = opts.hrFixed
+        } else {
+            hrf = this.chalks.hr(chars(len, opts.dash))
+        }
+        return cat(chars(indent), hrf)
+    }
+
+    _render(state) {
+        const {lines, warns} = state.output
+        const {opts} = this
+        const indent = +opts.indent || 0
+        const tab = chars(Number.isFinite(indent) ? indent : 0)
+        const bodies = lines.map(line => cat(tab, line))
+        const heads = []
+        const foots = []
+        if (opts.endTag) {
+            foots.push(opts.endTag)
+        }
+        if (opts.warnings && warns.length) {
+            const width = Math.max(...warns.map(msg => stripAnsi(msg).length))
+            const hr = this.hr(width, true)
+            const arr = opts.warnings === 'before' ? heads : foots
+            if (arr === foots) {
+                arr.push('')
+                arr.push(hr)
+            }
+            warns.forEach(msgf => arr.push(cat(tab, msgf)))
+            if (arr === heads) {
+                arr.push(hr)
+                arr.push('')
+            }
+        }
+        if (opts.beginTag) {
+            heads.push(opts.beginTag)
+        }
+        return [heads, bodies, foots].flat().join('\n')
+    }
+
+    _warnf(msg, n) {
+        const ch = this.chalks.warn
+        let warnf = ch.prefix('Warning')
+        if (n != null) {
+            warnf += cat(' ', ch.paren('('), ch.line('line:'), ch.num(n), ch.paren(')'))
+        }
+        warnf += sp(ch.colon(':'), ch.msg(msg))
+        return warnf
+    }
+
+    _poInit(state) {
+        const {text} = state.input
+        state.pretodo = ['msgid ""', 'msgstr ""']
+
+        // Do some pre-checks on the first 5 non-blank lines (trimmed):
+        //  - Do we have the prefix blank msgid/msgstr?
+        //  - Do we have any headers?
+        const checkLines = text.trim().split('\n').slice(0, 5).map(trim)
+        state.hasPreamble = checkLines.slice(0, 2).some(
+            line => state.pretodo.includes(line)
+        )
+        state.hasHeader = checkLines.some(line => (
+            line[0] === Q && last(line) === Q && count(line, ': ') === 1
+        ))
+        if (state.hasPreamble) {
+            state.section = 'preamble'
+        } else if (state.hasHeader) {
+            state.section = 'headers'
+        } else {
+            state.section = 'body'
+        }
+    }
+
+    _poLine(state) {
+        const {line, line: {w}} = state
+        if (state.section === 'preamble') {
+            if (state.pretodo.indexOf(line.trimmed) > -1) {
+                return this._poPreamble(state)
+            }
+            if (line.isq) {
+                if (state.hasHeader) {
+                    state.section = 'headers'
+                } else {
+                    state.section = 'body'
+                }
+            }
+        }
+        if (!line.trimmed) {
+            state.section = 'body'
+            return line.raw
+        }
+        if (state.section === 'headers') {
+            // header section
+            return this._poHeader(state)
+        }
+        if (state.section !== 'body') {
+            // section undetermined
+            if (!state.hasWarnedSection) {
+                w('Indeterminate section')
+                state.hasWarnedSection = true
+            }
+            return line.raw
+        }
+        state.hasWarnedSection = false
+        if (line.iscmt) {
+            // comment
+            return this._poComment(state)
+        }
+        if (line.isq) {
+            // quoted line
+            return this._poQuoted(state)
+        }
+        // attr/value
+        return this._poAttr(state)
+    }
+
+    _poPreamble(state) {
+        const {raw, trimmed, w} = state.line
+        const {opts} = this
+        const chlk = this.chalks.po
+
+        // check for state change
+        const pi = state.pretodo.indexOf(trimmed)
+        if (pi > -1) {
+            state.pretodo.splice(pi, 1)
+        }
+        if (!state.pretodo.length) {
+            state.section = state.hasHeader ? 'headers' : body
+        }
+
+        if (!trimmed) {
+            return raw
+        }
+        if (pi < 0) {
+            w('Unrecognized preamble line')
+            return chlk.unknown(raw)
+        }
+        if (!opts.headers) {
+            return null
+        }
+        return chlk.preamble(raw)
+    }
+
+    _poHeader(state) {
+        const {raw, trimmed, isq, endws, w} = state.line
+        const {opts} = this
+        const chlk = this.chalks.po
+        const ch = chlk.header
+
+        // Check for state change.
+        if (!trimmed) {
+            // Blank line means end of headers.
+            state.section = 'body'
+            return opts.headers ? raw : null
+        }
+
+        if (!isq) {
+            w(' No quote char, or non-quote char at start of line')
+            return chlk.unknown(raw)
+        }
+        const qi = qidx(raw.substring(1))
+        if (qi < 0) {
+            w('No close quote')
+            return chlk.unknown(raw)
+        }
+        if (qi !== trimmed.length - 2) {
+            w('Non-whitespace character after close quote')
+            return chlk.unknown(raw)
+        }
+        const parts = raw.substring(1, qi + 1).split(': ')
+        if (parts.length === 1) {
+            w('No colon in header')
+            return chlk.unknown(raw)
+        }
+        if (parts.length !== 2) {
+            w('Too many colons in header')
+            return chlk.unknown(raw)
+        }
+        if (!opts.headers) {
+            return null
+        }
+        const [nstr, vstr] = parts
+
+        let vf
+        if (endsWith(vstr, '\\n')) {
+            vf = cat(ch.value(vstr.substring(0, vstr.length - 2)), ch.break('\\n'))
+        } else {
+            vf = ch.value(vstr)
+        }
+        const qf = ch.quote(Q)
+        return cat(
+            qf, ch.name(nstr), sp(ch.colon(':'), vf), qf, endws
+        )
+    }
+
+    _poComment(state) {
+        const {raw, w} = state.line
+        const ch = this.chalks.po.comment
+
+        const type = ({':': 'ref', ',': 'flag'})[raw[1]]
+        if (!type) {
+            return ch.default(raw)
+        }
+
+        let linef = ch.prefix(raw.substring(0, 2))
         const craw = raw.substring(2)
         if (type === 'ref') {
             // Reference
             craw.split(' ').forEach((ref, i) => {
                 if (i > 0) {
-                    line += chlk.default(' ')
+                    linef += ch.default(' ')
                 }
                 const parts = ref.split(':')
                 if (parts[0] && parts[1]) {
-                    line += chlk.ref(
+                    linef += ch.ref(
                         [parts.shift(), parts.shift()].join(':')
                     )
                     // Add any remaining parts
-                    line += chlk.default(parts.join(':'))
+                    linef += ch.default(parts.join(':'))
                     return
                 }
-                line += chlk.default(ref)
+                linef += ch.default(ref)
             })
-            return line
+            return linef
         }
+
         // Flag
         craw.split(',').forEach((flag, i) => {
             if (i > 0) {
-                line += chlk.default(',')
+                linef += ch.default(',')
             }
             flag.split(' ').forEach((part, j) => {
                 if (j > 0) {
-                    line += chlk.default(' ')
+                    linef += ch.default(' ')
                 }
                 if (PoFlagHash[part]) {
-                    line += chlk.flag(part)
+                    linef += ch.flag(part)
                     return
                 }
-                line += chlk.default(part)
+                linef += ch.default(part)
             })
         })
-        return line
+        return linef
+    }
+
+    _poQuoted(state) {
+        const {raw, trimmed, endws, w} = state.line
+        const chlk = this.chalks.po
+        const ch = chlk.message
+
+        // A quoted string "..." on a line.
+        const qi = qidx(raw.substring(1))
+        if (qi < 0) {
+            w('No close quote')
+            return chlk.unknown(raw)
+        }
+        if (qi !== trimmed.length - 2) {
+            w('Non-whitespace character after close quote')
+            return chlk.unknown(raw)
+        }
+        const vstr = raw.substring(1, qi + 1)
+
+        const qf = ch.quote(Q)
+        return cat(qf, ch.value(vstr), qf, endws)
+    }
+
+    _poAttr(state) {
+        const {raw, trimmed, endws, w} = state.line
+        const chlk = this.chalks.po
+        const ch = chlk.message
+
+        // Message attr
+        const attr = PoAttrs.find(attr => raw.indexOf(attr) === 0)
+        if (!attr) {
+            w(`Unrecognized attribute: ${attr}`)
+            return raw
+        }
+        const si = raw.indexOf(' ')
+        if (si < 0) {
+            // Nothing after attr name.
+            w(`Invalid attribute line format`)
+            return raw
+        }
+
+        // Format the attr string.
+        const astr = raw.substring(0, si)
+        let attrf = ''
+        if (astr === attr) {
+            // Just the attr name.
+            attrf = ch.attr(attr)
+        } else if (attr === 'msgstr') {
+            // Check for brace [] expression.
+            const match = astr.substring(attr.length).match(BraceRegex)
+            if (match) {
+                const nstr = match[1]
+                attrf += cat(ch.attr(attr), ch.brace('['))
+                attrf += cat(ch.index(nstr), ch.brace(']'))
+            }
+        }
+        if (!attrf) {
+            w('Failed to parse attribute name')
+            return raw
+        }
+
+        // Message attr string value
+        const vraw = raw.substring(si + 1)
+        const qi1 = qidx(vraw)
+        if (qi1 < 0) {
+            w('No quote after attribute')
+            return sp(attrf, vraw)
+        }
+        const midws = vraw.substring(0, qi1) + ' '
+        if (midws.trim()) {
+            w('Non-whitespace character following attribute name')
+            return sp(attrf, chlk.unknown(vraw))
+        }
+        const qi2 = qidx(vraw.substring(qi1 + 1))
+        if (qi2 < 0) {
+            w('No close quote')
+            return sp(attrf, chlk.unknown(vraw))
+        }
+        const vstr = vraw.substring(qi1 + 1, qi2 + 1)
+
+        const qf = ch.quote(Q)
+        return cat(attrf, midws, qf, ch.value(vstr), qf, endws)
     }
 }
 
+function qidx(str) {
+    if (str[0] === Q) {
+        return 0
+    }
+    const match = str.match(QuoteRegex)
+    return match ? match[1].length : -1
+}
+
+function cat(...args) {
+    return args.flat().join('')
+}
+
+function sp(...args) {
+    return args.flat().join(' ')
+}
+
+function last(str, n = 1) {
+    return str[str.length - n] || ''
+}
+
+function count(str, srch) {
+    return str.split(srch).length - 1
+}
+
+function endsWith(str, srch) {
+    return str.length - str.lastIndexOf(srch) === srch.length
+}
+
+function trim(str) {
+    return str.trim()
+}
+
+function chars(n, chr = ' ') {
+    return ''.padEnd(n, chr)
+}
 
 const PoFlagHash = arrayHash([
     'fuzzy',
