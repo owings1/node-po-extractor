@@ -39,6 +39,7 @@ const {
     isWriteableStream,
     mergeDefault,
     parseStack,
+    revalue,
 } = require('./util')
 
 const LevelNums = {
@@ -56,6 +57,8 @@ const LevelNames = [
     'log',
     'debug',
 ]
+
+const Caret = '\u276f'
 
 const Defaults = {}
 
@@ -129,7 +132,7 @@ Defaults.styles = {
 Defaults.prefix = function (level) {
     const {chalks} = this
     if (level === 'info') {
-        return chalks[level].prefix('\u276f')
+        return chalks[level].prefix(Caret)
     }
     return cat(
         chalks.brace('['),
@@ -163,10 +166,10 @@ Defaults.prelog = function (level, args) {
             const entries = Object.entries(arg)
             if (entries.length == 1) {
                 const [key, value] = entries[0]
-                if (key == 'throwing' && hasError) {
+                if (key === 'throwing' && hasError) {
                     return null
                 }
-                if (key in chlk && typeof value == 'string') {
+                if (key in chlk && typeof isString(value)) {
                     return chlk.string(`${key}: ` + chlk[key](value))
                 }
             }
@@ -187,6 +190,35 @@ Defaults.format = function (args) {
     return formatWithOptions({colors}, ...args)
 }
 
+/**
+ * The main logging function, bound to individual methods in the constructor.
+ */
+function log(level, ...args) {
+    level = getLevelNumber(level)
+    if (level > this.logLevel) {
+        return
+    }
+    const method = level < 2 ? 'ewrite' : 'write'
+    const levelName = LevelNames[level]
+    const {opts} = this
+    if (isFunction(opts.prelog)) {
+        const result = opts.prelog.call(this, levelName, args)
+        // If the prelog function did not return anything, then we assume
+        // that it modified in place. Otherwise we take the return value,
+        // where null is cast to empty string.
+        if (result !== undefined) {
+            args = castToArray(result)
+        }
+    }
+    const prefixes = castToArray(getOrCallBound(opts.prefix, this, levelName))
+    const prefix = prefixes.length ? this.format(...prefixes) : null
+    const body = args.length ? this.format(...args) : ''
+    if (prefix) {
+        this[method](prefix + (body ? ' ' : ''))
+    }
+    this[method](body + '\n')
+}
+
 class Logger {
 
     constructor(opts) {
@@ -198,7 +230,7 @@ class Logger {
         const chalk = new Chalk({
             level: opts.colors ? Defaults.colors : 0
         })
-        const proxy = ChangeProxy(opts.styles, {
+        const chalkp = ChangeProxy(opts.styles, {
             filter     : isString,
             transform  : style => chalkPipe(style, chalk),
             enumerable : true,
@@ -209,23 +241,23 @@ class Logger {
                 get: () => Boolean(this.chalk.level),
                 set: n => this.chalk.level = n ? Defaults.colors : 0,
             },
-            styles: {get: () => proxy.ingress, enumerable: true},
+            styles: {get: () => chalkp.ingress, enumerable: true},
         })
         Object.defineProperties(this, {
             chalk  : {value: chalk},
-            chalks : {value: proxy.target},
-            opts   : {value: opts, enumerable: true},
+            chalks : {value: chalkp.target},
+            opts   : {value: opts, enumerable: false},
+            ...revalue(LevelNums, level => (
+                {value: log.bind(this, level), enumerable: true}
+            )),
         })
-        LevelNames.forEach(name =>
-            this[name] = this.level.bind(this, name)
-        )
     }
 
     write(data) {
         this.stdout.write(data)
     }
 
-    errwrite(data) {
+    ewrite(data) {
         this.stderr.write(data)
     }
 
@@ -233,38 +265,12 @@ class Logger {
         this.write(this.format(...args) + '\n')
     }
 
-    errprint(...args) {
-        this.errwrite(this.format(...args) + '\n')
+    eprint(...args) {
+        this.ewrite(this.format(...args) + '\n')
     }
 
     format(...args) {
         return this.opts.format.call(this, args)
-    }
-
-    level(level, ...args) {
-        level = getLevelNumber(level)
-        if (level > this.logLevel) {
-            return
-        }
-        const method = level < 2 ? 'errwrite' : 'write'
-        const levelName = LevelNames[level]
-        const {opts} = this
-        if (isFunction(opts.prelog)) {
-            const result = opts.prelog.call(this, levelName, args)
-            // If the prelog function did not return anything, then we assume
-            // that it modified in place. Otherwise we take the return value,
-            // where null is cast to empty string.
-            if (result !== undefined) {
-                args = castToArray(result)
-            }
-        }
-        const prefixes = castToArray(getOrCallBound(opts.prefix, this, levelName))
-        const prefix = prefixes.length ? this.format(...prefixes) : null
-        const body = args.length ? this.format(...args) : ''
-        if (prefix) {
-            this[method](prefix + (body ? ' ' : ''))
-        }
-        this[method](body + '\n')
     }
 
     get stdout() {

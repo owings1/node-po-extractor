@@ -118,6 +118,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+const chalk     = require('chalk')
+const chalkPipe = require('chalk-pipe')
 const deepmerge = require('deepmerge')
 
 const child_process = require('child_process')
@@ -594,6 +596,13 @@ class Util {
 
     static stripAnsi(str) {
         return str.replace(AnsiRegex, '')
+    }
+
+    static stylesToChalks(styles, chalk) {
+        if (!Util.isObject(styles)) {
+            return chalkPipe(styles, chalk)
+        }
+        return Util.revalue(styles, value => Util.stylesToChalks(value, chalk))
     }
 
     /**
