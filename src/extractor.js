@@ -56,10 +56,14 @@
  * SOFTWARE.
  */
 // Dependency requires
-const chalk           = require('chalk')
 const globby          = require('globby')
 const {transformSync} = require('@babel/core')
 const traverse        = require('@babel/traverse').default
+
+const utilh = require('console-utils-h')
+const {Cast, typeOf} = utilh
+const {arrayHash, arrayUnique} = utilh.arrays
+const {lget, lset} = utilh.objects
 
 // Node requires
 const fs   = require('fs')
@@ -69,16 +73,7 @@ const path = require('path')
 const Base  = require('./base')
 const Index = require('./index')
 const Sort  = require('./sorters')
-const {
-    arrayHash,
-    arrayUnique,
-    castToArray,
-    checkArg,
-    lget,
-    lset,
-    resolveSafe,
-    typeOf,
-} = require('./util')
+const {checkArg, resolveSafe} = require('./util')
 
 const {ArgumentError} = require('./errors')
 
@@ -96,9 +91,9 @@ const Defaults = {
     },
     parser   : 'flow',
     logging: {
-        chalks: {
+        styles: {
             info: {
-                prefix: chalk.green,
+                prefix: 'cyan',
             },
         },
     },
@@ -246,7 +241,7 @@ class Extractor extends Base {
     _extractFromCode(content) {
 
         const {opts} = this
-        const markers = arrayUnique(castToArray(opts.marker))
+        const markers = arrayUnique(Cast.toArray(opts.marker))
         const markersHash = arrayHash(markers)
 
         const commentKeyRegex = opts.comments.keyRegex
@@ -454,7 +449,7 @@ class CommentIndex {
     }
 
     add(comments) {
-        castToArray(comments).forEach(comment => {
+        Cast.toArray(comments).forEach(comment => {
             const {loc} = comment
             const {line} = loc.end
             const hash = this._hash(loc)
@@ -463,7 +458,7 @@ class CommentIndex {
     }
 
     remove(comments) {
-        castToArray(comments).forEach(comment => {
+        Cast.toArray(comments).forEach(comment => {
             const {loc} = comment
             const {line} = loc.end
             const hash = this._hash(loc)

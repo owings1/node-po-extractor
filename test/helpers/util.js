@@ -18,14 +18,14 @@ function getError(cb) {
 const Git = require('./git')
 const {MockOutput} = require('./io')
 const Util = require('../../src/util')
+const {merge} = require('console-utils-h')
 
 module.exports = {
     ger: getError,
     getError,
     Git,
     git : Git,
-    merge : Util.mergeDefault,
+    merge,
     MockOutput,
-    stripAnsi: Util.stripAnsi,
     update: Util.update
 }

@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 const chalk  = require('chalk')
+const utilh  = require('console-utils-h')
+const {arrayHash, arraySum} = utilh.arrays
+const {ucfirst} = utilh.strings
+
 const fs     = require('fs')
 const fse    = require('fs-extra')
 const path   = require('path')
@@ -9,12 +13,8 @@ const Base = require('./util/base')
 const Diffs = require('./util/diffs')
 const Errors = require('../src/errors')
 const {
-    arrayHash,
     lget,
     lset,
-    mergePlain,
-    sumArray,
-    ucfirst,
 } = require('../src/util')
 
 const BaseDir = resolve(__dirname, '..')

@@ -28,18 +28,12 @@ const globby = require('globby')
 // Node requires
 const {EventEmitter} = require('events')
 const fs = require('fs')
+const path = require('path')
 
+const utilh = require('console-utils-h')
+const {Cast, Logger, merge, typeOf} = utilh
 // Package requires
-const {
-    castToArray,
-    checkArg,
-    gitFileStatus,
-    mergeDefault,
-    relPath,
-    resolveSafe,
-    typeOf,
-} = require('./util')
-const {Logger} = require('console-utils-h')
+const {checkArg, gitFileStatus} = require('./util')
 const {UnsavedChangesError} = require('./errors')
 
 const GitStatusOk = ['clean', 'added', 'staged']
@@ -58,7 +52,7 @@ class Base extends EventEmitter {
 
     constructor(...opts) {
         super()
-        this.opts = mergeDefault(Defaults, ...opts)
+        this.opts = merge(Defaults, ...opts)
         if (!this.logger) {
             this.logger = new Logger(this.opts.logging)
         }
@@ -105,16 +99,24 @@ class Base extends EventEmitter {
     }
 
     glob(globs) {
-        globs = castToArray(globs).map(glob => this.resolve(glob))
+        globs = Cast.toArray(globs).map(glob => this.resolve(glob))
         return globby.sync(globs)
     }
 
     relPath(file) {
-        return relPath(this.opts.baseDir, this.resolve(file))
+        const {baseDir} = this.opts
+        if (baseDir) {
+            return path.relative(baseDir, this.resolve(file))
+        }
+        return file
     }
 
     resolve(file) {
-        return resolveSafe(this.opts.baseDir, file)
+        const {baseDir} = this.opts
+        if (baseDir) {
+            return path.resolve(baseDir, file)
+        }
+        return path.resolve(file)
     }
 
     /**

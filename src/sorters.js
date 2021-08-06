@@ -22,7 +22,7 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const {castToArray, isFunction} = require('./util')
+const {Cast, Is} = require('console-utils-h')
 
 /**
  * Extends every sorter with `asc` and `desc` properties. The `asc` property
@@ -30,7 +30,7 @@ const {castToArray, isFunction} = require('./util')
  * inverted arguments.
  */
 function _extendSorters(sorters) {
-    sorters.filter(isFunction).forEach(sorter => {
+    sorters.filter(Is.Function).forEach(sorter => {
         sorter.asc = sorter
         sorter.desc = function (a, b) {
             return sorter.call(this, b, a)
@@ -108,8 +108,8 @@ Sort.loc = function (a, b) {
  * @return {integer}
  */
 Sort.refs = function (a, b) {
-    a = castToArray(a)
-    b = castToArray(b)
+    a = Cast.toArray(a)
+    b = Cast.toArray(b)
     if (!a.length || !b.length) {
         if (a.length) {
             return -1

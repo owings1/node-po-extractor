@@ -1,12 +1,13 @@
 #!/usr/bin/env node
-const globby = require('globby')
+const globby  = require('globby')
+const {merge} = require('utilh')
 
 const chproc = require('child_process')
 const fs     = require('fs')
 const path   = require('path')
 const {basename, dirname, relative, resolve} = path
 
-const {gitFileStatus, mergePlain} = require('../src/util')
+const {gitFileStatus} = require('../src/util')
 const Base = require('./util/base')
 const {ScriptError} = require('../src/errors')
 
@@ -203,7 +204,7 @@ class ExamplesScript extends Base {
         const {logger} = this
         const beginTag = this.cmd === 'build' ? PoBeginTag : null
         const endTag   = this.cmd === 'build' ? PoEndTag : null
-        sopts = mergePlain(
+        sopts = merge(
             {
                 // 10K max
                 maxBuffer: 1024 * 10,

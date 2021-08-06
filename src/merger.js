@@ -24,35 +24,22 @@
  */
 
 // Dependency requires
-const chalk = require('chalk')
-const fs    = require('fs')
 const fse   = require('fs-extra')
 const globby = require('globby')
 const parser = require('gettext-parser').po
-const path   = require('path')
+const utilh = require('console-utils-h')
+const {Cast, Is, merge} = utilh
+const {lget, lset, rekey, revalue} = utilh.objects
+
+// Node requires
+const fs   = require('fs')
+const path = require('path')
 
 // Package requires
 const Base = require('./base')
 const Sort = require('./sorters')
-const {
-    buffersEqual,
-    castToArray,
-    checkArg,
-    checkMax,
-    isFunction,
-    isObject,
-    lget,
-    lset,
-    mergePlain,
-    rekey,
-    relPath,
-    resolveSafe,
-    revalue,
-} = require('./util')
-const {
-    DuplicateKeyError,
-    MissingContextError
-} = require('./errors')
+const {buffersEqual, checkArg, checkMax} = require('./util')
+const {DuplicateKeyError, MissingContextError} = require('./errors')
 
 // Default options.
 const Defaults = {
@@ -68,9 +55,9 @@ const Defaults = {
         lineLength : -1,
     },
     logging: {
-        chalks: {
+        styles: {
             info: {
-                prefix: chalk.magenta,
+                prefix: 'magenta',
             },
         },
     },
@@ -89,7 +76,7 @@ class Merger extends Base {
         super(Defaults, opts)
         if (this.opts.references === true) {
             this.opts.references = {...Defaults.references}
-        } else if (!isObject(this.opts.references)) {
+        } else if (!Is.Object(this.opts.references)) {
             this.opts.references = {}
         }
         this._checkSortOption(this.sort)
@@ -357,7 +344,7 @@ class Merger extends Base {
             }
 
             const found = source[msgid]
-            const tran = mergePlain({msgid, msgstr: ['']}, found)
+            const tran = merge({msgid, msgstr: ['']}, found)
             const changes = []
             const info = {message, tran}
 
@@ -368,7 +355,7 @@ class Merger extends Base {
 
             if (isRefs) {
                 // Add file location reference comment.
-                const refs = castToArray(message.refs)
+                const refs = Cast.toArray(message.refs)
                 this.verbose(3, {refs})
                 if (refs.length) {
                     const refsChange = this._addReference(refs, tran)
@@ -383,7 +370,7 @@ class Merger extends Base {
             }
 
             // Add extracted comments.
-            const cmts = castToArray(message.comments)
+            const cmts = Cast.toArray(message.comments)
             if (cmts.length) {
                 const cmtsChange = this._addExtractedComment(cmts, tran)
                 if (found && cmtsChange) {
@@ -555,7 +542,7 @@ class Merger extends Base {
     _checkSortOption(value) {
         checkArg(
             value, 'opts.sort', it => (
-                it == null || isFunction(it) || Boolean(Sort.tran[it])
+                it == null || Is.Function(it) || Boolean(Sort.tran[it])
             )
         )
     }
@@ -572,7 +559,7 @@ class Merger extends Base {
         const {sort} = this.opts
         this._checkSortOption(sort)
         const that = {sourceOrderHash}
-        if (isFunction(sort)) {
+        if (Is.Function(sort)) {
             this.verbose(2, 'sorting by custom function')
             return sort.bind(that)
         }

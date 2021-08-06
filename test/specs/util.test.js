@@ -91,11 +91,4 @@ describe('Util', () => {
             })
         })
     })
-
-    describe('#isFunction', () => {
-        it('should return true for function', function () {
-            const res = Util.isFunction(() => {})
-            expect(res).to.equal(true)
-        })
-    })
 })
