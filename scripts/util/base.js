@@ -2,7 +2,7 @@
 const {ScriptError} = require('../../src/errors')
 
 const {isFunction} = require('../../src/util')
-const {Logger} = require('../..')
+const {Logger} = require('console-utils-h')
 
 class BaseScript {
 

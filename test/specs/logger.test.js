@@ -26,6 +26,7 @@ const chalk = require('chalk')
 const {expect} = require('chai')
 const {ger, merge, MockOutput, stripAnsi, update} = require('../helpers/util')
 
+/*
 describe('Logger', () => {
 
     const Logger = require('../../src/logger')
@@ -163,3 +164,4 @@ describe('Logger', () => {
         })
     })
 })
+*/

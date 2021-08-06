@@ -39,7 +39,7 @@ const {
     resolveSafe,
     typeOf,
 } = require('./util')
-const Logger = require('./logger')
+const {Logger} = require('console-utils-h')
 const {UnsavedChangesError} = require('./errors')
 
 const GitStatusOk = ['clean', 'added', 'staged']
