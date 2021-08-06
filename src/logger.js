@@ -39,8 +39,6 @@ const {
     isWriteableStream,
     mergeDefault,
     parseStack,
-    stylesToChalks,
-    update,
 } = require('./util')
 
 const LevelNums = {
@@ -69,15 +67,16 @@ Defaults.stderr = process.stderr
  * default is debug (4). Then the environment variables `LOG_LEVEL` and `LOGLEVEL`
  * are checked. Otherwise the default is info (2).
  */
-Defaults.logLevel = getLevelNumber(
-    process.env.DEBUG
-        ? 'debug'
-        : (
-            process.env.LOG_LEVEL ||
-            process.env.LOGLEVEL ||
-            'info'
-        )
-)
+if (process.env.DEBUG) {
+    Defaults.logLevel = 'debug'
+} else if (process.env.LOG_LEVEL) {
+    Defaults.logLevel = process.env.LOG_LEVEL
+} else if (process.env.LOGLEVEL) {
+    Defaults.logLevel = process.env.LOGLEVEL
+} else {
+    Defaults.logLevel = 'info'
+}
+Defaults.logLevel = getLevelNumber(Defaults.logLevel)
 
 /**
  * Whether to use colors. Default is to use chalk's determination.
@@ -186,10 +185,6 @@ Defaults.prelog = function (level, args) {
 Defaults.format = function (args) {
     const {colors} = this.opts
     return formatWithOptions({colors}, ...args)
-}
-
-function checkWriteStream(arg) {
-    return isWriteableStream(arg) || 'not a writeable stream'
 }
 
 class Logger {
@@ -309,6 +304,10 @@ class Logger {
         }
         return lines.join('\n')
     }
+}
+
+function checkWriteStream(arg) {
+    return isWriteableStream(arg) || 'not a writeable stream'
 }
 
 function getLevelNumber(value) {
