@@ -25,7 +25,7 @@
 const {expect} = require('chai')
 const path = require('path')
 const {resolve} = path
-const {ger, merge} = require('../helpers/util')
+const {ger, merge, MockOutput} = require('../helpers/util')
 
 describe('Extractor', () => {
 
@@ -205,31 +205,11 @@ describe('Extractor', () => {
             expect(extractor.logLevel).to.equal(-1)
         })
 
-        describe('custom logger', () => {
-
-            it('should allow a specific instance of Logger and keep reference', function () {
-                const {logger} = this.create()
-                const extractor = this.create({logger})
-                expect(extractor.logger).to.equal(logger)
-            })
-
-            it('should allow a plain object as custom logger and keep reference', function () {
-                const noop = () => {}
-                const logger = {
-                    info: noop,
-                    debug: noop,
-                    warn: noop,
-                    error: noop,
-                    snark: noop,
-                    log: noop
-                }
-                this.opts.logger = logger
-                const e1 = this.create()
-                expect(e1.logger).to.equal(logger)
-                delete this.opts.logger
-                const e2 = this.create({logger})
-                expect(e2.logger).to.equal(logger)
-            })
+        it('should accept custom logging.stdout', function () {
+            const stdout = new MockOutput
+            const opts = {logging: {stdout}}
+            const extractor = this.create(opts)
+            expect(extractor.logger.stdout).to.equal(stdout)
         })
     })
 
