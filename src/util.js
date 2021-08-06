@@ -178,6 +178,52 @@ class Util {
         return args.flat().join('')
     }
 
+    static ChangeProxy(source, opts) {
+        const {checkArg, isObject} = Util
+        checkArg(
+            source, 'source', 'object',
+            opts  , 'opts'  , 'object',
+        ).checkArg(
+            opts.transform  , 'transform', 'function',
+            opts.filter     , 'filter'   , 'null|function',
+        )
+        const enumerable = Boolean(opts.enumerable)
+        const {filter, transform} = opts
+
+        function build(source, opts) {
+            const ingress = {}, target = {}
+            Object.keys(source).forEach(key => {
+                const prop = {enumerable}
+                if (isObject(source[key])) {
+                    const next = build(source[key], opts)
+                    Object.defineProperty(target, key, {value: next.target})
+                    prop.get = () => next.ingress
+                    prop.set = object => {
+                        if (!isObject(object)) {
+                            return
+                        }
+                        Object.keys(object).forEach(key =>
+                            next.ingress[key] = object[key]
+                        )
+                    }
+                } else {
+                    target[key] = transform(source[key])
+                    prop.get = () => source[key]
+                    prop.set = value => {
+                        if (filter && !filter(value)) {
+                            return
+                        }
+                        source[key] = value
+                        target[key] = transform(value)
+                    }
+                }
+                Object.defineProperty(ingress, key, prop)
+            })
+            return {ingress, target}
+        }
+        return build(source, opts)
+    }
+
     // arg, name, type, ...
     static checkArg(...args) {
         while (args.length) {
