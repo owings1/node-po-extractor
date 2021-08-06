@@ -16,6 +16,7 @@ function getError(cb) {
 }
 
 const Git = require('./git')
+const {MockOutput} = require('./io')
 const Util = require('../../src/util')
 
 module.exports = {
@@ -24,4 +25,7 @@ module.exports = {
     Git,
     git : Git,
     merge : Util.mergeDefault,
+    MockOutput,
+    stripAnsi: Util.stripAnsi,
+    update: Util.update
 }
