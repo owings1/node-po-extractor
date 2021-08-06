@@ -73,20 +73,16 @@ These options are common to both the `Extractor` and `Merger`.
 
 - **verbose** `integer` default `0`: Set a value from `1` to `3` to enable more logging.
 
-- **logger** `object` default [`new Logger`][logger]: You can use this to
-    supply a custom logger. It must have the methods: `error`, `warn`, `info`, `log`, and `debug`,
-    which accept arbitrary arguments `(...args)` of any type. The default logger uses `console` methods.
-
 - **logging** `object`: Options to pass to the constructor of the default logger. If you supply a
-    custom logger, these are ignored. Available keys:
+    custom logger, these are ignored. Options include:
 
     - **logLevel** `string|integer` default `2`: The logLevel. A number from 0-4, or a string
     ('info', 'warn', 'error', 'debug'). The environment variables `LOG_LEVEL`, `LOGLEVEL`, and
     `DEBUG` are also checked.
 
-    - **prefix** `function`: A custom function to provide the prefix. See [logger.js][logger].
+    - **stdout** `stream`: Writeable stream for stdout, default is `process.stdout`.
 
-    - **chalks** `object`: An object with chalk styes. See [logger.js][logger].
+    - **stderr** `stream`: Writeable stream for stderr, default is `process.stderr`.
 
 ### Extractor options
 
