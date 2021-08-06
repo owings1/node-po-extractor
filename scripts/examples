@@ -49,6 +49,13 @@ class ExamplesScript extends Base {
         logger.info('Available commands: run, build, help')
     }
 
+    cmd_list() {
+        const {logger, opts, args} = this
+        const examples = this.listNames()
+        logger.info('Found', examples.length, 'examples:')
+        examples.forEach(name => logger.print('  -', name))
+    }
+
     cmd_run() {
         const {logger, opts, args} = this
         let examples = this.listNames(args)
@@ -117,7 +124,7 @@ class ExamplesScript extends Base {
     listNames(names) {
         const examples = globby.sync(ExamplesDir + '/*/' + EgScript)
             .map(file => basename(dirname(file)))
-        if (!names.length) {
+        if (!names || !names.length) {
             return examples
         }
         const invalid = names.filter(name => !examples.includes(name))
