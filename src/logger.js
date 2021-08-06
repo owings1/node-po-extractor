@@ -50,13 +50,9 @@ const LevelNums = {
     debug : 4,
 }
 
-const LevelNames = [
-    'error',
-    'warn',
-    'info',
-    'log',
-    'debug',
-]
+const LevelNames = Object.keys(LevelNums).sort((a, b) =>
+    LevelNums[a] - LevelNums[b]
+)
 
 const Caret = '\u276f'
 
@@ -246,7 +242,7 @@ class Logger {
         Object.defineProperties(this, {
             chalk  : {value: chalk},
             chalks : {value: chalkp.target},
-            opts   : {value: opts, enumerable: false},
+            opts   : {value: opts},
             ...revalue(LevelNums, level => (
                 {value: log.bind(this, level), enumerable: true}
             )),
@@ -317,7 +313,7 @@ function checkWriteStream(arg) {
 }
 
 function getLevelNumber(value) {
-    if (typeof value === 'string') {
+    if (isString(value)) {
         value = value.toLowerCase()
     }
     if (value in LevelNums) {
