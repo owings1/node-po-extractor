@@ -122,6 +122,7 @@ const deepmerge = require('deepmerge')
 
 const child_process = require('child_process')
 const path = require('path')
+const {EventEmitter} = require('events')
 
 const {
     ArgumentError,
@@ -173,6 +174,10 @@ class Util {
         return arr
     }
 
+    static cat(...args) {
+        return args.flat().join('')
+    }
+
     // arg, name, type, ...
     static checkArg(...args) {
         while (args.length) {
@@ -187,7 +192,7 @@ class Util {
                 if (ret instanceof Error) {
                     throw ret
                 }
-                ret = ret || `Invalid argument (${name}): ${arg}.`
+                ret = `Invalid argument (${name}):` + (ret || arg)
             } else if (exp.split('|').includes(argType)) {
                 continue
             }
@@ -206,18 +211,19 @@ class Util {
     }
 
     static createMerger(opts) {
+        const {arrayHash, checkArg, isPlainObject} = Util
         opts = {
             name: null,
             argFilter: Boolean,
             ignoreKeys: null,
             customMerge: null,
-            isMergeableObject: defaultIsMergable,
+            isMergeableObject: isPlainObject,
             ...opts
         }
         if (opts.ignoreKeys && opts.customMerge) {
             throw new ArgumentError(`Cannot specify both ignoreKeys and customMerge`)
         }
-        Util.checkArg(
+        checkArg(
             opts.argFilter,         'argFilter',         'function|null',
             opts.ignoreKeys,        'ignoreKeys',        'array|null',
             opts.isMergeableObject, 'isMergeableObject', 'function|null',
@@ -225,9 +231,6 @@ class Util {
             opts.name,              'name',              'string|null',
         )
 
-        function defaultIsMergable (obj) {
-            return Util.isPlainObject(obj) && !Util.isFunction(obj.info)
-        }
         function chooseb(a, b) {
             return b
         }
@@ -237,13 +240,12 @@ class Util {
         const filter = opts.argFilter || noFilter
 
         const merger = function customMerger(...args) {
-            args = args.filter(filter)
-            return deepmerge.all(args, opts)
+            return deepmerge.all(args.filter(filter), opts)
         }
 
         const {ignoreKeys} = opts
         if (ignoreKeys) {
-            const keyHash = Util.arrayHash(ignoreKeys)
+            const keyHash = arrayHash(ignoreKeys)
             opts.customMerge = function checkKeyChooseb(key) {
                 if (keyHash[key]) {
                     return chooseb
@@ -251,7 +253,7 @@ class Util {
             }
             Object.defineProperty(merger, 'getIgnoreKeysHashCopy', {
                 value: function keyHashView () {
-                    return Util.arrayHash(ignoreKeys)
+                    return arrayHash(ignoreKeys)
                 }
             })
         } else if (opts.customMerge) {
@@ -305,14 +307,11 @@ class Util {
         try {
             result = Util.exec(cmd, args, opts)
         } catch (error) {
-            result = {error}
-        }
-        if (result.error) {
             const err = new ExecResultError(
-                result.error.message || `Failed to execute git command`,
-                result.error,
+                error.message || `Failed to execute git command`,
+                error,
             )
-            err.code = result.error.code
+            err.code = error.code
             throw err
         }
         if (result.status != 0) {
@@ -353,7 +352,7 @@ class Util {
     }
 
     static isFunction(arg) {
-        return typeof arg == 'function'
+        return typeof arg === 'function'
     }
 
     /**
@@ -396,6 +395,30 @@ class Util {
         return true
     }
 
+    static isReadableStream(arg) {
+        return arg instanceof EventEmitter && Util.isFunction(arg.read)
+    }
+
+    static isStream(arg) {
+        return Util.isReadableStream(arg) || Util.isWriteableStream(arg)
+    }
+
+    static isString(arg) {
+        return typeof arg === 'string'
+    }
+
+    static isWritableStream(arg) {
+        return Util.isWriteableStream(arg)
+    }
+
+    static isWriteableStream(arg) {
+        return (
+            arg instanceof EventEmitter &&
+            Util.isFunction(arg.write) &&
+            Util.isFunction(arg.end)
+        )
+    }
+
     static lget(obj, keyPath) {
         if (!keyPath) {
             return
@@ -405,7 +428,7 @@ class Util {
             : String(keyPath).split('.')
         let base = obj
         for (let i = 0; i < parts.length; ++i) {
-            if (base == null || typeof base != 'object') {
+            if (!Util.isObject(base)) {
                 return
             }
             base = base[parts[i]]
@@ -433,21 +456,8 @@ class Util {
         return obj
     }
 
-    static locHash(loc) {
-        const {start = {}, end = {}} = loc || {}
-        return [start.line, start.column, end.line, end.column].join('/')
-    }
-
-    static locToObject(loc) {
-        const {start = {}, end = {}} = loc || {}
-        return {...loc, start: {...start}, end: {...end}}
-    }
-
     static mergePlain(...args) {
-        return deepmerge.all(
-            [...args].map(arg => Util.isObject(arg) ? arg : {}),
-            {isMergeableObject: Util.isPlainObject},
-        )
+        return Util.mergeDefault(...args)
     }
 
     /**
@@ -498,9 +508,9 @@ class Util {
      */
     static rawErrorMessage(err) {
         let raw = ''
-        if (typeof err.inspect == 'function') {
+        if (Util.isFunction(err.inspect)) {
             raw += err.inspect()
-        } else if (err.message && typeof err.message.toString == 'function') {
+        } else if (err.message && Util.isFunction(err.message.toString)) {
             raw += err.message
         }
         return raw
@@ -562,6 +572,9 @@ class Util {
         if (Buffer.isBuffer(arg)) {
             return 'buffer'
         }
+        if (Util.isStream(arg)) {
+            return 'stream'
+        }
         if (Util.isObject(arg)) {
             return 'object'
         }
@@ -599,12 +612,13 @@ class Util {
     }
 }
 
-Object.defineProperty(Util, 'mergeDefault', {
-    value: Util.createMerger({
-        cast: false,
-        name:'MergeDefault',
-        ignoreKeys: ['logger'],
-    })
+Object.defineProperties(Util, {
+    mergeDefault: {
+        value: Util.createMerger({
+            name       :'MergeDefault',
+            ignoreKeys : ['logger'],
+        }),
+    }
 })
 
 // From: https://github.com/chalk/ansi-regex/blob/c1b5e45f/index.js

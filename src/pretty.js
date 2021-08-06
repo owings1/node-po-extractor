@@ -25,7 +25,7 @@
 const Logger = require('./logger')
 
 const chalk = require('chalk')
-const {arrayHash, mergePlain, revalue, stripAnsi} = require('./util')
+const {arrayHash, cat, mergePlain, revalue, stripAnsi} = require('./util')
 
 const Defaults = {
     // For toString() on a buffer.
@@ -522,10 +522,6 @@ function qidx(str) {
     }
     const match = str.match(QuoteRegex)
     return match ? match[1].length : -1
-}
-
-function cat(...args) {
-    return args.flat().join('')
 }
 
 function sp(...args) {
