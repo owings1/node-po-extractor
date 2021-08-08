@@ -30,7 +30,7 @@ const {EventEmitter} = require('events')
 const fs = require('fs')
 const path = require('path')
 
-const utilh = require('console-utils-h')
+const utilh = require('utils-h')
 const {Cast, Logger, merge, typeOf} = utilh
 // Package requires
 const {checkArg, gitFileStatus} = require('./util')

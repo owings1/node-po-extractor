@@ -44,7 +44,7 @@
     "chalk": "^4.1.2",
     "fs-extra": "^10.0.0",
     "gettext-parser": "^4.0.4",
-    "console-utils-h": "github:owings1/node-console-utils-h",
+    "utils-h": "github:owings1/node-utils-h",
     "globby": "^10.0.2"
   }
 }

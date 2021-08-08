@@ -60,9 +60,8 @@ const globby          = require('globby')
 const {transformSync} = require('@babel/core')
 const traverse        = require('@babel/traverse').default
 
-const utilh = require('console-utils-h')
+const utilh = require('utils-h')
 const {Cast, typeOf} = utilh
-const {arrayHash, arrayUnique} = utilh.arrays
 const {lget, lset} = utilh.objects
 
 // Node requires
@@ -73,7 +72,7 @@ const path = require('path')
 const Base  = require('./base')
 const Index = require('./index')
 const Sort  = require('./sorters')
-const {checkArg, resolveSafe} = require('./util')
+const {arrayHash, arrayUnique, checkArg, resolveSafe} = require('./util')
 
 const {ArgumentError} = require('./errors')
 

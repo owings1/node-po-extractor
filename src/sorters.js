@@ -22,7 +22,7 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const {Cast, Is} = require('console-utils-h')
+const {Cast, Is} = require('utils-h')
 
 /**
  * Extends every sorter with `asc` and `desc` properties. The `asc` property

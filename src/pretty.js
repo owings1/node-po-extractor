@@ -22,7 +22,7 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const utilh = require('console-utils-h')
+const utilh = require('utils-h')
 const {Logger, merge: mergePlain} = utilh
 const {arrayHash} = util.arrays
 const {cat, stripAnsi} = utilh.strings

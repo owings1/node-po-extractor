@@ -27,8 +27,9 @@
 const fse   = require('fs-extra')
 const globby = require('globby')
 const parser = require('gettext-parser').po
-const utilh = require('console-utils-h')
+const utilh = require('utils-h')
 const {Cast, Is, merge} = utilh
+const {buffersEqual} = utilh.buffers
 const {lget, lset, rekey, revalue} = utilh.objects
 
 // Node requires
@@ -38,7 +39,7 @@ const path = require('path')
 // Package requires
 const Base = require('./base')
 const Sort = require('./sorters')
-const {buffersEqual, checkArg, checkMax} = require('./util')
+const {checkArg, checkMax} = require('./util')
 const {DuplicateKeyError, MissingContextError} = require('./errors')
 
 // Default options.

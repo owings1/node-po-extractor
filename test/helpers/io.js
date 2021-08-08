@@ -1,5 +1,5 @@
 const stream = require('stream')
-const {stripAnsi} = require('console-utils-h').strings
+const {stripAnsi} = require('utils-h').strings
 
 class MockOutput extends stream.Writable {
 

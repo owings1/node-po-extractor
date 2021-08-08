@@ -22,7 +22,7 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const {Is, typeOf} = require('console-utils-h')
+const {Is, typeOf} = require('utils-h')
 const child_process = require('child_process')
 const path = require('path')
 const {EventEmitter} = require('events')
@@ -31,23 +31,16 @@ const {ArgumentError, ExecExitError, ExecResultError} = require('./errors')
 
 class Util {
 
-    static buffersEqual(a, b) {
-        if (Is.Function(a.equals)) {
-            return a.equals(b)
-        }
-        if (Is.Function(a.compare)) {
-            return a.compare(b) == 0
-        }
-        const len = a.length
-        if (len != b.length) {
-            return false
-        }
-        for (let i = 0; i < len; ++i) {
-            if (a.readUInt8(i) !== b.readUInt8(i)) {
-                return false
-            }
-        }
-        return true
+    static arrayHash(...args) {
+        return Object.fromEntries(
+            args.map(Object.values).flat().map(value =>
+                [value, true]
+            )
+        )
+    }
+
+    static arrayUnique(...arrs) {
+        return Object.keys(Util.arrayHash(...arrs))
     }
 
     // arg, name, type, ...
@@ -144,20 +137,6 @@ class Util {
             break
         }
         return {fileStatus, result}
-    }
-
-    static relPath(baseDir, file) {
-        if (baseDir) {
-            return path.relative(baseDir, file)
-        }
-        return file
-    }
-
-    static resolveSafe(dir, ...args) {
-        if (dir) {
-            return path.resolve(dir, ...args)
-        }
-        return path.resolve(...args)
     }
 }
 
