@@ -22,12 +22,15 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const utilh = require('utils-h')
-const {Logger, merge: mergePlain} = utilh
-const {arrayHash} = util.arrays
-const {cat, stripAnsi} = utilh.strings
-const {revalue} = utilh.objects
-const chalk = require('chalk')
+const {
+    Logger,
+    colors  : {Chalk},
+    objects : {revalue, valueHash},
+    merging : {mergePlain},
+    strings : {cat, endsWith, stripAnsi},
+} = require('utils-h')
+
+const chalk = new Chalk()
 
 const Defaults = {
     // For toString() on a buffer.
@@ -538,10 +541,6 @@ function count(str, srch) {
     return str.split(srch).length - 1
 }
 
-function endsWith(str, srch) {
-    return str.length - str.lastIndexOf(srch) === srch.length
-}
-
 function trim(str) {
     return str.trim()
 }
@@ -550,7 +549,7 @@ function chars(n, chr = ' ') {
     return ''.padEnd(n, chr)
 }
 
-const PoFlagHash = arrayHash([
+const PoFlagHash = valueHash([
     'fuzzy',
     [
         'awk-format',
