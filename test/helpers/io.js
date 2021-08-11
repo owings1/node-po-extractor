@@ -3,14 +3,26 @@ const {stripAnsi} = require('utils-h').strings
 
 class MockOutput extends stream.Writable {
 
-    constructor(...args) {
-        super(...args)
+    constructor(opts = {}) {
+        super()
         this.raw = ''
+        this.opts = {...opts}
     }
 
-    write(chunk) { this.raw += chunk }
+    write(chunk) {
+        this.raw += chunk
+        if (this.debug) {
+            process.stderr.write(chunk)
+        }
+    }
 
-    end() {}
+    get debug() {
+        return Boolean(this.opts.debug)
+    }
+
+    set debug(v) {
+        this.opts.debug = Boolean(v)
+    }
 
     get lines() { return this.raw.split('\n') }
 
