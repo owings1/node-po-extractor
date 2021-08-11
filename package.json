@@ -14,6 +14,13 @@
     "type": "git",
     "url": "git+https://github.com/owings1/node-po-extractor.git"
   },
+  "files": [
+    "src",
+    "index.js",
+    "LICENSE.txt",
+    "NOTICE.md",
+    "README.md"
+  ],
   "keywords": [
     "i18n",
     "gettext",
