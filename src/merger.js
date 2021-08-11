@@ -24,13 +24,24 @@
  */
 
 // Dependency requires
+const {
+    buffers : {buffersEqual},
+    merging : {merge},
+    objects : {
+        lget,
+        lset,
+        rekey,
+        revalue,
+    },
+    types   : {
+        castToArray,
+        isFunction,
+        isObject,
+    }
+} = require('utils-h')
 const fse   = require('fs-extra')
 const globby = require('globby')
 const parser = require('gettext-parser').po
-const utilh = require('utils-h')
-const {Cast, Is, merge} = utilh
-const {buffersEqual} = utilh.buffers
-const {lget, lset, rekey, revalue} = utilh.objects
 
 // Node requires
 const fs   = require('fs')
@@ -77,10 +88,10 @@ class Merger extends Base {
         super(Defaults, opts)
         if (this.opts.references === true) {
             this.opts.references = {...Defaults.references}
-        } else if (!Is.Object(this.opts.references)) {
+        } else if (!isObject(this.opts.references)) {
             this.opts.references = {}
         }
-        this._checkSortOption(this.sort)
+        checkSortOption(this.sort)
     }
 
     /**
@@ -248,7 +259,7 @@ class Merger extends Base {
         this.logger.info('Reading', {file: rel})
         const sourceContent = this.readFile(sourceFile)
         const sourcePo = parser.parse(sourceContent, charset)
-        const {pos, ...result} = this._mergePoResult(sourcePo, messages)
+        const {pos, ...result} = mergePoResult.call(this, sourcePo, messages)
         const po = pos[method]
         const content = parser.compile(po)
         return {content, po, sourceContent, sourcePo, ...result}
@@ -268,305 +279,298 @@ class Merger extends Base {
             translations    , 'translations'    , 'object',
             sourceOrderHash , 'sourceOrderHash' , 'object',
         )
-        const sorter = this._getSorter(sourceOrderHash)
+        const sorter = getSorter.call(this, sourceOrderHash)
         const values = Object.values(translations).sort(sorter)
         return Object.fromEntries(values.map(tran => [tran.msgid, tran]))
     }
+}
 
-    /**
-     * Inspired by:
-     *
-     *    https://github.com/oliviertassinari/i18n-extract/blob/9110ba513/src/mergeMessagesWithPO.js
-     *
-     * @private
-     *
-     * @throws {ArgumentError}
-     * @throws {DuplicateKeyError}
-     * @throws {MissingContextError}
-     *
-     * @emits `added`
-     * @emits `found`
-     * @emits `changed`
-     * @emits `missing`
-     *
-     * @param {object}
-     * @param {object}
-     * @return {object}
-     */
-    _mergePoResult(po, messages) {
+/**
+ * Inspired by:
+ *
+ *    https://github.com/oliviertassinari/i18n-extract/blob/9110ba513/src/mergeMessagesWithPO.js
+ *
+ * @private
+ *
+ * @throws {ArgumentError}
+ * @throws {DuplicateKeyError}
+ * @throws {MissingContextError}
+ *
+ * @emits `added`
+ * @emits `found`
+ * @emits `changed`
+ * @emits `missing`
+ *
+ * @param {object}
+ * @param {object}
+ * @return {object}
+ */
+function mergePoResult(po, messages) {
 
-        checkArg(
-            po       , 'po'       , 'object',
-            messages , 'messages' , 'array',
-        ).checkArg(
-            po.translations , 'po.translations' , 'object',
-            po.headers      , 'po.headers'      , 'object',
+    checkArg(
+        po       , 'po'       , 'object',
+        messages , 'messages' , 'array',
+    ).checkArg(
+        po.translations , 'po.translations' , 'object',
+        po.headers      , 'po.headers'      , 'object',
+    )
+
+    const {context} = this.opts
+
+    if (!po.translations[context]) {
+        throw new MissingContextError(
+            `Context '${context}' missing from po.`
         )
+    }
 
-        const {context} = this.opts
+    const isRefs = this.opts.references.enabled
+    const source = po.translations[context]
+    const headersLc = rekey(po.headers, key => key.toLowerCase())
 
-        if (!po.translations[context]) {
-            throw new MissingContextError(
-                `Context '${context}' missing from po.`
+    this.logger.info('Processing po', {
+        context,
+        language     : headersLc.language || 'unknown',
+        translations : Object.keys(source).length - ('' in source),
+    })
+
+    const track = {
+        added   : {},
+        found   : {},
+        changed : {},
+        missing : {},
+    }
+    const data = {
+        patch   : {},
+        replace : {},
+    }
+
+    messages.forEach(message => {
+
+        const msgid = message.key
+
+        this.logger.debug({msgid})
+
+        if (msgid in data.patch) {
+            throw new DuplicateKeyError(
+                `Duplicate msgid: '${msgid}'. Collate the messages first.`
             )
         }
 
-        const isRefs = this.opts.references.enabled
-        const source = po.translations[context]
-        const headersLc = rekey(po.headers, key => key.toLowerCase())
+        const found = source[msgid]
+        const tran = merge({msgid, msgstr: ['']}, found)
+        const changes = []
+        const info = {message, tran}
 
-        this.logger.info('Processing po', {
-            context,
-            language     : headersLc.language || 'unknown',
-            translations : Object.keys(source).length - ('' in source),
-        })
+        this.verbose(2, {msgid, isFound: Boolean(found)})
 
-        const track = {
-            added   : {},
-            found   : {},
-            changed : {},
-            missing : {},
-        }
-        const data = {
-            patch   : {},
-            replace : {},
-        }
+        data.patch[msgid] = tran
+        data.replace[msgid] = tran
 
-        messages.forEach(message => {
-
-            const msgid = message.key
-
-            this.logger.debug({msgid})
-
-            if (msgid in data.patch) {
-                throw new DuplicateKeyError(
-                    `Duplicate msgid: '${msgid}'. Collate the messages first.`
-                )
-            }
-
-            const found = source[msgid]
-            const tran = merge({msgid, msgstr: ['']}, found)
-            const changes = []
-            const info = {message, tran}
-
-            this.verbose(2, {msgid, isFound: Boolean(found)})
-
-            data.patch[msgid] = tran
-            data.replace[msgid] = tran
-
-            if (isRefs) {
-                // Add file location reference comment.
-                const refs = Cast.toArray(message.refs)
-                this.verbose(3, {refs})
-                if (refs.length) {
-                    const refsChange = this._addReference(refs, tran)
-                    if (found && refsChange) {
-                        changes.push(refsChange)
-                    }
-                } else {
-                    this.logger.warn(
-                        `Missing location reference for '${msgid}'`
-                    )
-                }
-            }
-
-            // Add extracted comments.
-            const cmts = Cast.toArray(message.comments)
-            if (cmts.length) {
-                const cmtsChange = this._addExtractedComment(cmts, tran)
-                if (found && cmtsChange) {
-                    changes.push(cmtsChange)
-                }
-            }
-
-            if (found) {
-                // Message exists in source po.
-                track.found[msgid] = info
-                this.verbose(2, 'found', {msgid})
-                this.emit('found', tran, message)
-                if (changes.length) {
-                    // Message was changed (comments).
-                    track.changed[msgid] = info
-                    info.changes = changes
-                    this.verbose(2, 'changes', changes)
-                    this.emit('changed', tran, message, changes)
+        if (isRefs) {
+            // Add file location reference comment.
+            const refs = castToArray(message.refs)
+            this.verbose(3, {refs})
+            if (refs.length) {
+                const refsChange = addReference(refs, tran, this.opts.references)
+                if (found && refsChange) {
+                    changes.push(refsChange)
                 }
             } else {
-                // Message does not exist in source po.
-                track.added[msgid] = info
-                if (context) {
-                    tran.msgctxt = context
-                }
-                this.verbose(1, 'added', {msgid})
-                this.emit('added', tran, message)
-            }
-        })
-
-        Object.values(source).forEach(tran => {
-            const {msgid} = tran
-            if (msgid && !data.patch[msgid]) {
-                this.verbose(1, 'missing', {msgid})
-                track.missing[msgid] = {tran}
-                data.patch[msgid] = tran
-                this.emit('missing', tran)
-            }
-        })
-
-        const counts = revalue(track, type => Object.values(type).length)
-        const isChange = Boolean(counts.added + counts.missing + counts.changed)
-
-        const sourceOrderHash = revalue(source, (tran, i) => i)
-        const pos = revalue(data, trans => {
-            const copy = {...po, translations: {...po.translations}}
-            trans = this.sortedTranslations(trans, sourceOrderHash)
-            copy.translations[context] = trans
-            return copy
-        })
-
-        this.logger.info('Totals', counts)
-        this.verbose(2, 'mergePoResult', {isChange})
-
-        return {track, counts, isChange, pos}
-    }
-
-    _addExtractedComment(cmts, tran) {
-        if (!tran.comments) {
-            tran.comments = {}
-        }
-        const extracted = cmts.join('\n')
-        let change = false
-        if (tran.comments.extracted != extracted) {
-            change = {
-                'comments.extracted': {
-                    old: tran.comments.extracted,
-                    new: extracted,
-                }
-            }
-            tran.comments.extracted = extracted
-        }
-        return change
-    }
-
-    /**
-     * @private
-     *
-     * @param {array}
-     * @param {object}
-     * @return {object|boolean}
-     */
-    _addReference(refs, tran) {
-        if (!tran.comments) {
-            tran.comments = {}
-        }
-        const reference = this._buildReference(refs)
-        let change = false
-        if (tran.comments.reference != reference) {
-            change = {
-                'comments.reference': {
-                    old: tran.comments.reference,
-                    new: reference,
-                }
-            }
-            tran.comments.reference = reference
-        }
-        return change
-    }
-
-    /**
-     * @private
-     *
-     * @param {array}
-     * @return {array}
-     */
-    _buildReference(refs) {
-        const opts = this.opts.references
-        const counts = {}
-        const built = []
-        for (let i = 0; i < refs.length; ++i) {
-            if (checkMax(built.length, opts.max)) {
-                break
-            }
-            const ref = refs[i]
-            const [file, line] = ref.split(':')
-            if (!counts[file]) {
-                counts[file] = 0
-            }
-            counts[file] += 1
-            if (checkMax(counts[file], opts.perFile)) {
-                continue
-            }
-            built.push(ref)
-        }
-        return this._buildReferenceLines(built).join('\n')
-    }
-
-    /**
-     * @private
-     *
-     * @param {array}
-     * @return {array}
-     */
-    _buildReferenceLines(built) {
-        const opts = this.opts.references
-        const lines = []
-        let line = ''
-        for (let i = 0, count = 0; i < built.length; ++i, ++count) {
-            const ref = built[i]
-            const isMax = Boolean(
-                checkMax(count + 1, opts.perLine) ||
-                (
-                    count > 0 &&
-                    checkMax(line.length + ref.length + 1, opts.lineLength)
+                this.logger.warn(
+                    `Missing location reference for '${msgid}'`
                 )
-            )
-            if (isMax) {
-                lines.push(line)
-                line = ''
-                count = 0
             }
-            line += (count > 0 ? ' ' : '') + ref
         }
-        if (line) {
-            lines.push(line)
-        }
-        return lines
-    }
 
-    /**
-     * @private
-     *
-     * @throws {ArgumentError}
-     *
-     * @param {any}
-     * @return {undefined}
-     */
-    _checkSortOption(value) {
-        checkArg(
-            value, 'opts.sort', it => (
-                it == null || Is.Function(it) || Boolean(Sort.tran[it])
+        // Add extracted comments.
+        const cmts = castToArray(message.comments)
+        if (cmts.length) {
+            const cmtsChange = addExtractedComment(cmts, tran)
+            if (found && cmtsChange) {
+                changes.push(cmtsChange)
+            }
+        }
+
+        if (found) {
+            // Message exists in source po.
+            track.found[msgid] = info
+            this.verbose(2, 'found', {msgid})
+            this.emit('found', tran, message)
+            if (changes.length) {
+                // Message was changed (comments).
+                track.changed[msgid] = info
+                info.changes = changes
+                this.verbose(2, 'changes', changes)
+                this.emit('changed', tran, message, changes)
+            }
+        } else {
+            // Message does not exist in source po.
+            track.added[msgid] = info
+            if (context) {
+                tran.msgctxt = context
+            }
+            this.verbose(1, 'added', {msgid})
+            this.emit('added', tran, message)
+        }
+    })
+
+    Object.values(source).forEach(tran => {
+        const {msgid} = tran
+        if (msgid && !data.patch[msgid]) {
+            this.verbose(1, 'missing', {msgid})
+            track.missing[msgid] = {tran}
+            data.patch[msgid] = tran
+            this.emit('missing', tran)
+        }
+    })
+
+    const counts = revalue(track, type => Object.values(type).length)
+    const isChange = Boolean(counts.added + counts.missing + counts.changed)
+
+    const sourceOrderHash = revalue(source, (tran, i) => i)
+    const pos = revalue(data, trans => {
+        const copy = {...po, translations: {...po.translations}}
+        trans = this.sortedTranslations(trans, sourceOrderHash)
+        copy.translations[context] = trans
+        return copy
+    })
+
+    this.logger.info('Totals', counts)
+    this.verbose(2, 'mergePoResult', {isChange})
+
+    return {track, counts, isChange, pos}
+}
+
+/**
+ * @private
+ * @throws {ArgumentError}
+ * @param {object}
+ * @return {function}
+ */
+function getSorter(sourceOrderHash) {
+    const {sort} = this.opts
+    checkSortOption(sort)
+    const that = {sourceOrderHash}
+    if (isFunction(sort)) {
+        this.verbose(2, 'sorting by custom function')
+        return sort.bind(that)
+    }
+    this.verbose(2, `sorting by ${sort}`)
+    return Sort.tran[sort].bind(that)
+}
+
+/**
+ * @param {array}
+ * @param {object}
+ * @return {object}
+ */
+function addExtractedComment(cmts, tran) {
+    if (!tran.comments) {
+        tran.comments = {}
+    }
+    const extracted = cmts.join('\n')
+    let change = false
+    if (tran.comments.extracted != extracted) {
+        change = {
+            'comments.extracted': {
+                old: tran.comments.extracted,
+                new: extracted,
+            }
+        }
+        tran.comments.extracted = extracted
+    }
+    return change
+}
+/**
+ * @param {array}
+ * @param {object}
+ * @param {object}
+ * @return {object|boolean}
+ */
+function addReference(refs, tran, opts) {
+    if (!tran.comments) {
+        tran.comments = {}
+    }
+    const reference = buildReference(refs, opts)
+    let change = false
+    if (tran.comments.reference != reference) {
+        change = {
+            'comments.reference': {
+                old: tran.comments.reference,
+                new: reference,
+            }
+        }
+        tran.comments.reference = reference
+    }
+    return change
+}
+/**
+ * @param {array}
+ * @param {object}
+ * @return {array}
+ */
+function buildReference(refs, opts) {
+    const counts = {}
+    const built = []
+    for (let i = 0; i < refs.length; ++i) {
+        if (checkMax(built.length, opts.max)) {
+            break
+        }
+        const ref = refs[i]
+        const [file, line] = ref.split(':')
+        if (!counts[file]) {
+            counts[file] = 0
+        }
+        counts[file] += 1
+        if (checkMax(counts[file], opts.perFile)) {
+            continue
+        }
+        built.push(ref)
+    }
+    return buildReferenceLines(built, opts).join('\n')
+}
+
+/**
+ * @param {array}
+ * @param {object}
+ * @return {array}
+ */
+function buildReferenceLines(built, opts) {
+    const lines = []
+    let line = ''
+    for (let i = 0, count = 0; i < built.length; ++i, ++count) {
+        const ref = built[i]
+        const isMax = Boolean(
+            checkMax(count + 1, opts.perLine) ||
+            (
+                count > 0 &&
+                checkMax(line.length + ref.length + 1, opts.lineLength)
             )
         )
-    }
-
-    /**
-     * @private
-     *
-     * @throws {ArgumentError}
-     *
-     * @param {object}
-     * @return {function}
-     */
-    _getSorter(sourceOrderHash) {
-        const {sort} = this.opts
-        this._checkSortOption(sort)
-        const that = {sourceOrderHash}
-        if (Is.Function(sort)) {
-            this.verbose(2, 'sorting by custom function')
-            return sort.bind(that)
+        if (isMax) {
+            lines.push(line)
+            line = ''
+            count = 0
         }
-        this.verbose(2, `sorting by ${sort}`)
-        return Sort.tran[sort].bind(that)
+        line += (count > 0 ? ' ' : '') + ref
     }
+    if (line) {
+        lines.push(line)
+    }
+    return lines
+}
+
+/**
+ * @throws {ArgumentError}
+ * @param {any}
+ * @return {undefined}
+ */
+function checkSortOption(value) {
+    checkArg(
+        value, 'opts.sort', it => (
+            it == null || isFunction(it) || Boolean(Sort.tran[it])
+        )
+    )
 }
 
 module.exports = Merger
