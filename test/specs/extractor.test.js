@@ -212,7 +212,10 @@ describe('Extractor', () => {
         })
 
         it('should accept object for parser', function () {
-            const parser = new Extractor()._getBabelOpts()
+            const parser = {
+                sourceType: 'module',
+                plugins: ['flow'],
+            }
             this.create({parser})
         })
 

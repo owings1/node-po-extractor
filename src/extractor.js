@@ -28,7 +28,7 @@
  * - https://www.npmjs.com/package/i18n-extract
  * - https://github.com/oliviertassinari/i18n-extract/blob/9110ba51/src/extractFromCode.js
  *
- * Methods _getKeys(), _extractFromCode(), and _getBabelOpts()
+ * Methods getKeys(), extractFromCode(), and getBabelOpts()
  *
  * The 18n-extract license is as follows:
  * --------------------------------
@@ -110,9 +110,9 @@ class Extractor extends Base {
      */
     constructor(opts) {
         super(Defaults, opts)
-        this.opts.comments = this._getCommentOpts()
+        this.opts.comments = getCommentOpts(this.opts)
         // Fail fast.
-        this._getBabelOpts()
+        getBabelOpts(this.opts)
         this.idx = new Index
     }
 
@@ -145,7 +145,7 @@ class Extractor extends Base {
         this.logger.info('Extracting from', files.length, 'files')
         let count = 0
         files.forEach(file => {
-            count += this._addFile(file, encoding).length
+            count += addFile.call(this, file, encoding).length
         })
         this.logger.info('Extracted', count, 'key instances')
         return this
@@ -164,7 +164,7 @@ class Extractor extends Base {
         checkArg(file, 'file', 'string')
         const rel = this.relPath(file)
         this.logger.info('Extracting from', {file: rel})
-        const count = this._addFile(file, encoding).length
+        const count = addFile.call(this, file, encoding).length
         this.logger.info('Extracted', count, 'key instances')
         return this
     }
@@ -193,241 +193,244 @@ class Extractor extends Base {
         this.idx.clear()
         return this
     }
+}
 
-    /**
-     * @private
-     *
-     * @param {string}
-     * @param {string}
-     * @return {array}
-     */
-    _addFile(file, encoding = null) {
-        checkArg(file, 'file', 'string')
-        encoding = encoding || this.opts.encoding
-        const content = this.readFile(file).toString(encoding)
-        return this._addFileContent(file, content)
+/**
+ * @private
+ * @param {string}
+ * @param {string}
+ * @return {array}
+ */
+function addFile(file, encoding = null) {
+    checkArg(file, 'file', 'string')
+    encoding = encoding || this.opts.encoding
+    const content = this.readFile(file).toString(encoding)
+    return addFileContent.call(this, file, content)
+}
+
+/**
+ * @private
+ * @param {string}
+ * @param {string}
+ * @return {array}
+ */
+function addFileContent(file, content) {
+    const {context} = this.opts
+    const rel = this.relPath(file)
+    this.verbose(1, {file: rel})
+    const msgs = extractFromCode(content, this.opts, this.logger)
+    msgs.forEach(msg => {
+        const {key} = msg
+        const ref = [rel, msg.loc.start.line].join(':')
+        const cmt = msg.comment || null
+        this.verbose(3, {key, ref, cmt})
+        this.idx.add(context, key, ref, cmt)
+    })
+    this.verbose(msgs.length ? 1 : 2, msgs.length, 'keys', {file: rel})
+    return msgs
+}
+
+/**
+ * Adapted from:
+ *
+ *   https://github.com/oliviertassinari/i18n-extract/blob/9110ba51/src/extractFromCode.js
+ *
+ * @param {string} The code
+ * @param {object} The options
+ * @param {Logger} The logger
+ * @return {array} Extracted message objects {key, loc}
+ */
+function extractFromCode(content, opts, log) {
+    const markers = arrayUnique(castToArray(opts.marker))
+    const markersHash = valueHash(markers)
+    const commentKeyRegex = opts.comments.keyRegex
+        ? new RegExp(opts.comments.keyRegex)
+        : null
+    const commentIngoreRegex = opts.comments.ignoreRegex
+        ? new RegExp(opts.comments.ignoreRegex)
+        : null
+    const keys = []
+    const ignoredLineHash = {}
+    const cidx = new CommentIndex
+    const makeComment = keyLine => {
+        const cmts = cidx.forKeyAt(keyLine)
+        cidx.remove(cmts)
+        return cmts.map(it => it.value.trim())
+            .filter(Boolean)
+            .join('\n') || null
     }
-
-    /**
-     * @private
-     *
-     * @param {string}
-     * @param {string}
-     * @return {array}
-     */
-    _addFileContent(file, content) {
-        const {context} = this.opts
-        const rel = this.relPath(file)
-        this.verbose(1, {file: rel})
-        const msgs = this._extractFromCode(content)
-        msgs.forEach(msg => {
-            const {key} = msg
-            const ref = [rel, msg.loc.start.line].join(':')
-            const cmt = msg.comment || null
-            this.verbose(3, {key, ref, cmt})
-            this.idx.add(context, key, ref, cmt)
-        })
-        this.verbose(msgs.length ? 1 : 2, msgs.length, 'keys', {file: rel})
-        return msgs
-    }
-
-    /**
-     * Copied and adapted from:
-     *
-     *   https://github.com/oliviertassinari/i18n-extract/blob/9110ba51/src/extractFromCode.js
-     *
-     * @private
-     * @param {string} The code
-     * @return {array} Extracted message objects {key, loc}
-     */
-    _extractFromCode(content) {
-        const {opts, logger: log} = this
-        const markers = arrayUnique(castToArray(opts.marker))
-        const markersHash = valueHash(markers)
-        const commentKeyRegex = opts.comments.keyRegex
-            ? new RegExp(opts.comments.keyRegex)
+    const {ast} = transformSync(content, getBabelOpts(opts))
+    if (opts.comments.extract) {
+        cidx.add(ast.comments)
+    }        
+    ast.comments.forEach(comment => {
+        const {loc} = comment
+        const lineStart = loc.start.line
+        // Look for keys in the comments.
+        const keyMatch = commentKeyRegex
+            ? commentKeyRegex.exec(comment.value)
             : null
-        const commentIngoreRegex = opts.comments.ignoreRegex
-            ? new RegExp(opts.comments.ignoreRegex)
-            : null
-        const keys = []
-        const ignoredLineHash = {}
-        const cidx = new CommentIndex
-        const makeComment = keyLine => {
-            const cmts = cidx.forKeyAt(keyLine)
-            cidx.remove(cmts)
-            return cmts.map(it => it.value.trim())
-                .filter(Boolean)
-                .join('\n') || null
+        if (keyMatch) {
+            const msg = {
+                key: keyMatch[1].trim(),
+                loc: loc,
+            }
+            cidx.remove(comment)
+            msg.comment = makeComment(lineStart)
+            
+            keys.push(msg)
         }
-        const {ast} = transformSync(content, this._getBabelOpts())
-        if (opts.comments.extract) {
-            cidx.add(ast.comments)
-        }        
-        ast.comments.forEach(comment => {
-            const {loc} = comment
-            const lineStart = loc.start.line
-            // Look for keys in the comments.
-            const keyMatch = commentKeyRegex
-                ? commentKeyRegex.exec(comment.value)
-                : null
-            if (keyMatch) {
-                const msg = {
-                    key: keyMatch[1].trim(),
-                    loc: loc,
-                }
-                cidx.remove(comment)
-                msg.comment = makeComment(lineStart)
-                
+        // Check for ignored lines
+        const ignoreMatch = commentIngoreRegex
+            ? commentIngoreRegex.exec(comment.value)
+            : null
+        if (ignoreMatch) {
+            ignoredLineHash[lineStart] = true
+            cidx.remove(comment)
+        }
+    })
+    // Look for keys in the source code.
+    traverse(ast, {
+        CallExpression: path => {
+            const {node} = path
+            const {loc, callee: {name, type, property}} = node
+            const shouldIgnore = Boolean(
+                // Skip ignored lines
+                loc && ignoredLineHash[loc.end.line]
+            )
+            const shouldExtract = !shouldIgnore && Boolean(
+                // Match marker
+                (
+                    type === 'Identifier' &&
+                    markersHash[name]
+                ) ||
+                // Include members if enabled
+                (
+                    opts.members &&
+                    type === 'MemberExpression' &&
+                    markersHash.hasOwnProperty(property.name)
+                )
+                //||markers.some(marker => path.get('callee').matchesPattern(marker))
+            )
+            if (!shouldExtract) {
+                return
+            }
+            const aidx = opts.argPos < 0
+                ? node.arguments.length + opts.argPos
+                : opts.argPos
+            const arg = node.arguments[aidx]
+            if (!arg) {
+                log.warn('No argument found at position', opts.argPos, loc)
+                return
+            }
+            getKeys(arg, log).filter(Boolean).forEach(key => {
+                const msg = {key, loc}
+                msg.comment = makeComment(loc.start.line)
                 keys.push(msg)
-            }
-            // Check for ignored lines
-            const ignoreMatch = commentIngoreRegex
-                ? commentIngoreRegex.exec(comment.value)
-                : null
-            if (ignoreMatch) {
-                ignoredLineHash[lineStart] = true
-                cidx.remove(comment)
-            }
-        })
-        // Look for keys in the source code.
-        traverse(ast, {
-            CallExpression: path => {
-                const {node} = path
-                const {loc, callee: {name, type, property}} = node
-                const shouldIgnore = Boolean(
-                    // Skip ignored lines
-                    loc && ignoredLineHash[loc.end.line]
+            })
+        },
+    })
+    return keys
+}
+
+/**
+ * Copied and adapted from:
+ *
+ *   https://github.com/oliviertassinari/i18n-extract/blob/9110ba51/src/extractFromCode.js
+ *
+ * @param {Node} Babel node (See @babel/parser/lib/index.js)
+ * @param {Logger} The logger
+ * @return {array} Extracted message objects {key, loc}
+ */
+function getKeys(node, log) {
+
+    if (node.type === 'StringLiteral') {
+        return [node.value]
+    }
+
+    if (node.type === 'BinaryExpression' && node.operator === '+') {
+        const left = getKeys(node.left, log)
+        const right = getKeys(node.right, log)
+        if (left.length > 1 || right.length > 1) {
+            // TODO
+            log.warn( 
+                'Unsupported multiple keys for binary expression, keys skipped.'
+            )
+        }
+        return [left[0] + right[0]]
+    }
+
+    if (node.type === 'TemplateLiteral') {
+        return [node.quasis.map(quasi => quasi.value.cooked).join('*')]
+    }
+
+    if (node.type === 'ConditionalExpression') {
+        return [...getKeys(node.consequent, log), ...getKeys(node.alternate, log)]
+    }
+
+    if (node.type === 'LogicalExpression') {
+        switch (node.operator) {
+            case '&&':
+                return [...getKeys(node.right, log)]
+            case '||':
+                return [...getKeys(node.left, log), ...getKeys(node.right, log)]
+            default:
+                log.warn(
+                    `Unsupported logicalExpression operator: ${node.operator}`
                 )
-                const shouldExtract = !shouldIgnore && Boolean(
-                    // Match marker
-                    (
-                        type === 'Identifier' &&
-                        markersHash[name]
-                    ) ||
-                    // Include members if enabled
-                    (
-                        opts.members &&
-                        type === 'MemberExpression' &&
-                        markersHash.hasOwnProperty(property.name)
-                    )
-                    //||markers.some(marker => path.get('callee').matchesPattern(marker))
-                )
-                if (!shouldExtract) {
-                    return
-                }
-                const aidx = opts.argPos < 0
-                    ? node.arguments.length + opts.argPos
-                    : opts.argPos
-                const arg = node.arguments[aidx]
-                if (!arg) {
-                    log.warn('No argument found at position', opts.argPos, loc)
-                    return
-                }
-                this._getKeys(arg).filter(Boolean).forEach(key => {
-                    const msg = {key, loc}
-                    msg.comment = makeComment(loc.start.line)
-                    keys.push(msg)
-                })
-            },
-        })
-        return keys
+                return [null]
+        }
     }
 
-    /**
-     * Copied and adapted from:
-     *
-     *   https://github.com/oliviertassinari/i18n-extract/blob/9110ba51/src/extractFromCode.js
-     *
-     * @private
-     * @param {Node} Babel node (See @babel/parser/lib/index.js)
-     * @return {array} Extracted message objects {key, loc}
-     */
-    _getKeys(node) {
-
-        if (node.type === 'StringLiteral') {
-            return [node.value]
-        }
-
-        if (node.type === 'BinaryExpression' && node.operator === '+') {
-            const left = this._getKeys(node.left)
-            const right = this._getKeys(node.right)
-            if (left.length > 1 || right.length > 1) {
-                // TODO
-                this.logger.warn( 
-                    'Unsupported multiple keys for binary expression, keys skipped.'
-                )
-            }
-            return [left[0] + right[0]]
-        }
-
-        if (node.type === 'TemplateLiteral') {
-            return [node.quasis.map(quasi => quasi.value.cooked).join('*')]
-        }
-
-        if (node.type === 'ConditionalExpression') {
-            return [...this._getKeys(node.consequent), ...this._getKeys(node.alternate)]
-        }
-
-        if (node.type === 'LogicalExpression') {
-            switch (node.operator) {
-                case '&&':
-                    return [...this._getKeys(node.right)]
-                case '||':
-                    return [...this._getKeys(node.left), ...this._getKeys(node.right)]
-                default:
-                    this.logger.warn(
-                        `Unsupported logicalExpression operator: ${node.operator}`
-                    )
-                    return [null]
-            }
-        }
-
-        if (NoInformationTypes[node.type]) {
-            return ['*'] // We can't extract anything.
-        }
-
-        this.logger.warn(`Unsupported node: ${node.type}`)
-
-        return [null]
+    if (NoInformationTypes[node.type]) {
+        return ['*'] // We can't extract anything.
     }
 
-    /**
-     * Copied and adapted from:
-     *
-     *   https://github.com/oliviertassinari/i18n-extract/blob/9110ba51/src/extractFromCode.js
-     *
-     * Get the babel options.
-     *
-     * @return {object}
-     */
-    _getBabelOpts() {
-        const {parser} = this.opts
+    log.warn(`Unsupported node: ${node.type}`)
 
-        const type = typeOf(parser)
+    return [null]
+}
 
-        if (type === 'object') {
-            return parser
-        }
-        if (type === 'string') {
-            if (!Parsers[parser]) {
-                throw new ArgumentError(`Unknown parser: '${parser}'`)
-            }
-            return Parsers[parser].babel
-        }
-        throw new ArgumentError(`Option 'parser' must be an object or string, got '${type}'`)
+/**
+ * @param {object}
+ * @return {object}
+ */
+function getCommentOpts(opts) {
+    const {comments} = opts
+    if (comments === true) {
+        return {...Defaults.comments}
     }
-
-    _getCommentOpts() {
-        const {comments} = this.opts
-        if (comments === true) {
-            return {...Defaults.comments}
-        }
-        if (typeOf(comments) !== 'object') {
-            return {}
-        }
-        return comments
+    if (typeOf(comments) !== 'object') {
+        return {}
     }
+    return comments
+}
+
+/**
+ * Copied and adapted from:
+ *
+ *   https://github.com/oliviertassinari/i18n-extract/blob/9110ba51/src/extractFromCode.js
+ *
+ * Get the babel options.
+ *
+ * @param {object}
+ * @return {object}
+ */
+function getBabelOpts(opts) {
+    const {parser} = opts
+
+    const type = typeOf(parser)
+
+    if (type === 'object') {
+        return parser
+    }
+    if (type === 'string') {
+        if (!Parsers[parser]) {
+            throw new ArgumentError(`Unknown parser: '${parser}'`)
+        }
+        return Parsers[parser].babel
+    }
+    throw new ArgumentError(`Option 'parser' must be an object or string, got '${type}'`)
 }
 
 class CommentIndex {
@@ -440,7 +443,7 @@ class CommentIndex {
         castToArray(comments).forEach(comment => {
             const {loc} = comment
             const {line} = loc.end
-            const hash = this._hash(loc)
+            const hash = hashLoc(loc)
             lset(this.idx, [line, hash], comment)
         })
     }
@@ -449,7 +452,7 @@ class CommentIndex {
         castToArray(comments).forEach(comment => {
             const {loc} = comment
             const {line} = loc.end
-            const hash = this._hash(loc)
+            const hash = hashLoc(loc)
             if (this.idx[line]) {
                 delete this.idx[line][hash]
                 if (!Object.keys(this.idx[line]).length) {
@@ -472,12 +475,13 @@ class CommentIndex {
         }
         return cmts
     }
-
-    _hash(loc) {
-        const {start, end} = loc
-        return [start.line, start.column, end.line, end.column].join('/')
-    }
 }
+
+function hashLoc(loc) {
+    const {start, end} = loc
+    return [start.line, start.column, end.line, end.column].join('/')
+}
+
 /**
  * Copied and adapted from:
  *
