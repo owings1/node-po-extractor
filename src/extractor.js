@@ -56,25 +56,28 @@
  * SOFTWARE.
  */
 // Dependency requires
+const {
+    objects : {lget, lset, valueHash},
+    types   : {castToArray, typeOf},
+} = require('utils-h')
 const globby          = require('globby')
 const {transformSync} = require('@babel/core')
 const traverse        = require('@babel/traverse').default
-
-const utilh = require('utils-h')
-const {Cast, typeOf} = utilh
-const {lget, lset} = utilh.objects
 
 // Node requires
 const fs   = require('fs')
 const path = require('path')
 
 // Package requires
-const Base  = require('./base')
-const Index = require('./index')
-const Sort  = require('./sorters')
-const {arrayHash, arrayUnique, checkArg, resolveSafe} = require('./util')
-
-const {ArgumentError} = require('./errors')
+const Base  = require('./base.js')
+const Index = require('./index.js')
+const Sort  = require('./sorters.js')
+const {ArgumentError} = require('./errors.js')
+const {
+    arrayUnique,
+    checkArg,
+    resolveSafe,
+} = require('./util.js')
 
 // Default options.
 const Defaults = {
@@ -238,28 +241,18 @@ class Extractor extends Base {
      * @return {array} Extracted message objects {key, loc}
      */
     _extractFromCode(content) {
-
-        const {opts} = this
-        const markers = arrayUnique(Cast.toArray(opts.marker))
-        const markersHash = arrayHash(markers)
-
+        const {opts, logger: log} = this
+        const markers = arrayUnique(castToArray(opts.marker))
+        const markersHash = valueHash(markers)
         const commentKeyRegex = opts.comments.keyRegex
             ? new RegExp(opts.comments.keyRegex)
             : null
         const commentIngoreRegex = opts.comments.ignoreRegex
             ? new RegExp(opts.comments.ignoreRegex)
             : null
-
-        const {ast} = transformSync(content, this._getBabelOpts())
-
         const keys = []
         const ignoredLineHash = {}
         const cidx = new CommentIndex
-
-        if (opts.comments.extract) {
-            cidx.add(ast.comments)
-        }
-
         const makeComment = keyLine => {
             const cmts = cidx.forKeyAt(keyLine)
             cidx.remove(cmts)
@@ -267,13 +260,13 @@ class Extractor extends Base {
                 .filter(Boolean)
                 .join('\n') || null
         }
-        
+        const {ast} = transformSync(content, this._getBabelOpts())
+        if (opts.comments.extract) {
+            cidx.add(ast.comments)
+        }        
         ast.comments.forEach(comment => {
-
             const {loc} = comment
             const lineStart = loc.start.line
-
-
             // Look for keys in the comments.
             const keyMatch = commentKeyRegex
                 ? commentKeyRegex.exec(comment.value)
@@ -288,7 +281,6 @@ class Extractor extends Base {
                 
                 keys.push(msg)
             }
-
             // Check for ignored lines
             const ignoreMatch = commentIngoreRegex
                 ? commentIngoreRegex.exec(comment.value)
@@ -298,15 +290,11 @@ class Extractor extends Base {
                 cidx.remove(comment)
             }
         })
-
         // Look for keys in the source code.
         traverse(ast, {
-
             CallExpression: path => {
-
                 const {node} = path
                 const {loc, callee: {name, type, property}} = node
-
                 const shouldIgnore = Boolean(
                     // Skip ignored lines
                     loc && ignoredLineHash[loc.end.line]
@@ -328,12 +316,10 @@ class Extractor extends Base {
                 if (!shouldExtract) {
                     return
                 }
-
                 const aidx = opts.argPos < 0
                     ? node.arguments.length + opts.argPos
                     : opts.argPos
                 const arg = node.arguments[aidx]
-
                 this._getKeys(arg).filter(Boolean).forEach(key => {
                     const msg = {key, loc}
                     msg.comment = makeComment(loc.start.line)
@@ -341,7 +327,6 @@ class Extractor extends Base {
                 })
             },
         })
-
         return keys
     }
 
@@ -448,7 +433,7 @@ class CommentIndex {
     }
 
     add(comments) {
-        Cast.toArray(comments).forEach(comment => {
+        castToArray(comments).forEach(comment => {
             const {loc} = comment
             const {line} = loc.end
             const hash = this._hash(loc)
@@ -457,7 +442,7 @@ class CommentIndex {
     }
 
     remove(comments) {
-        Cast.toArray(comments).forEach(comment => {
+        castToArray(comments).forEach(comment => {
             const {loc} = comment
             const {line} = loc.end
             const hash = this._hash(loc)
@@ -542,7 +527,7 @@ const Parsers = {
  *
  *   https://github.com/oliviertassinari/i18n-extract/blob/9110ba51/src/extractFromCode.js
  */
-const NoInformationTypes = arrayHash([
+const NoInformationTypes = valueHash([
     'CallExpression',
     'Identifier',
     'MemberExpression',
