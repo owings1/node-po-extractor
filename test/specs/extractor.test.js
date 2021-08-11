@@ -146,6 +146,15 @@ describe('Extractor', () => {
             expect(msgs).to.have.length(1)
             expect(msgs[0].key).to.equal('String at Position 2')
         })
+
+        it('should warn on no argument at position and not extract', function () {
+            const stderr = new MockOutput
+            const opts = {argPos: 3, logging: {stderr}}
+            const msgs = this.create(opts)
+                .extract('src/position.js')
+            expect(msgs).to.have.length(0)
+            expect(stderr.plain.toLowerCase()).to.contain('position')
+        })
     })
 
     describe('expressions', () => {

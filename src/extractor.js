@@ -320,6 +320,10 @@ class Extractor extends Base {
                     ? node.arguments.length + opts.argPos
                     : opts.argPos
                 const arg = node.arguments[aidx]
+                if (!arg) {
+                    log.warn('No argument found at position', opts.argPos, loc)
+                    return
+                }
                 this._getKeys(arg).filter(Boolean).forEach(key => {
                     const msg = {key, loc}
                     msg.comment = makeComment(loc.start.line)
