@@ -309,7 +309,7 @@ class Extractor extends Base {
                     (
                         opts.members &&
                         type === 'MemberExpression' &&
-                        markersHash[property.name]
+                        markersHash.hasOwnProperty(property.name)
                     )
                     //||markers.some(marker => path.get('callee').matchesPattern(marker))
                 )

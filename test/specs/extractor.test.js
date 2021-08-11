@@ -109,6 +109,14 @@ describe('Extractor', () => {
                 .getMessages()
             expect(msgs).to.have.length(1)
         })
+
+        it('should not parse toString()', function () {
+            const opts = {members: true}
+            const msgs = this.create(opts)
+                .addFile('src/tostring.js')
+                .getMessages()
+            expect(msgs).to.have.length(0)
+        })
     })
 
     describe('position', () => {
