@@ -418,9 +418,7 @@ function getCommentOpts(opts) {
  */
 function getBabelOpts(opts) {
     const {parser} = opts
-
     const type = typeOf(parser)
-
     if (type === 'object') {
         return parser
     }

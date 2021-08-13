@@ -22,7 +22,11 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const {Is, typeOf} = require('utils-h')
+const {
+    objects: {update, valueHash},
+    types: {isFunction, typeOf},
+} = require('utils-h')
+
 const child_process = require('child_process')
 const path = require('path')
 const {EventEmitter} = require('events')
@@ -31,16 +35,8 @@ const {ArgumentError, ExecExitError, ExecResultError} = require('./errors')
 
 class Util {
 
-    static arrayHash(...args) {
-        return Object.fromEntries(
-            args.map(Object.values).flat().map(value =>
-                [value, true]
-            )
-        )
-    }
-
-    static arrayUnique(...arrs) {
-        return Object.keys(Util.arrayHash(...arrs))
+    static arrayUnique(arr) {
+        return Object.keys(valueHash(arr))
     }
 
     // arg, name, type, ...
@@ -49,7 +45,7 @@ class Util {
             const [arg, name, exp] = args.splice(0, 3)
             const argType = typeOf(arg)
             let ret
-            if (Is.Function(exp)) {
+            if (isFunction(exp)) {
                 ret = exp(arg, argType)
                 if (ret === true) {
                     continue
@@ -107,7 +103,7 @@ class Util {
                 `Git exited with status code ${result.status}`
             )
             const {status, signal, pid, stderr} = result
-            Util.update(err, {
+            update(err, {
                 status,
                 signal,
                 pid,
@@ -115,8 +111,7 @@ class Util {
             })
             throw err
         }
-        const output = result.stdout.toString('utf-8')
-        const lines = output.split('\n')
+        const lines = result.stdout.toString('utf-8').split('\n')
         let fileStatus = 'clean'
         for (let i = 0; i < lines.length; ++i) {
             const line = lines[i]

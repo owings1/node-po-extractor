@@ -540,12 +540,9 @@ function buildReferenceLines(built, opts) {
     let line = ''
     for (let i = 0, count = 0; i < built.length; ++i, ++count) {
         const ref = built[i]
-        const isMax = Boolean(
-            checkMax(count + 1, opts.perLine) ||
-            (
-                count > 0 &&
-                checkMax(line.length + ref.length + 1, opts.lineLength)
-            )
+        const isMax = checkMax(count + 1, opts.perLine) || (
+            count > 0 &&
+            checkMax(line.length + ref.length + 1, opts.lineLength)
         )
         if (isMax) {
             lines.push(line)
