@@ -73,8 +73,7 @@ These options are common to both the `Extractor` and `Merger`.
 
 - **verbose** `integer` default `0`: Set a value from `1` to `3` to enable more logging.
 
-- **logging** `object`: Options to pass to the constructor of the default logger. If you supply a
-    custom logger, these are ignored. Options include:
+- **logging** `object`: Logging options.
 
     - **logLevel** `string|integer` default `2`: The logLevel. A number from 0-4, or a string
     ('info', 'warn', 'error', 'debug'). The environment variables `LOG_LEVEL`, `LOGLEVEL`, and
