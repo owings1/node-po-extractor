@@ -34,4 +34,36 @@ describe('Sort', () => {
             expect(res).to.equal(-1)
         })
     })
+
+    describe('#refs', () => {
+        it('should sort file:1, file:2', function () {
+            const refs = ['file:2', 'file:1']
+            refs.sort(Sort.refs)
+            expect(refs[0]).to.equal('file:1')
+            expect(refs[1]).to.equal('file:2')
+        })
+
+        it('should sort non-empty first', function () {
+            const refs = [null, 'file:1']
+            refs.sort(Sort.refs)
+            expect(refs[0]).to.equal('file:1')
+            expect(refs[1]).to.equal(null)
+            refs.sort(Sort.refs)
+            expect(refs[0]).to.equal('file:1')
+            expect(refs[1]).to.equal(null)
+        })
+        it('should sort non-empty first', function () {
+            const refs = [[], ['file:1']]
+            refs.sort(Sort.refs)
+            expect(refs[0]).to.deep.equal(['file:1'])
+            refs.sort(Sort.refs)
+            expect(refs[0]).to.deep.equal(['file:1'])
+        })
+        it('should sort empties', function () {
+            const refs = [null, null]
+            refs.sort(Sort.refs)
+            expect(refs[0]).to.equal(null)
+            expect(refs[1]).to.equal(null)
+        })
+    })
 })

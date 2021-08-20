@@ -1,0 +1,13 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=utf-8\n"
+"Language: en\n"
+
+msgid "m2"
+msgstr ""
+
+msgid "m3"
+msgstr ""
+
+msgid "m4"
+msgstr ""
