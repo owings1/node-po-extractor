@@ -108,7 +108,7 @@ These options are common to both the `Extractor` and `Merger`.
     keys from comments.
 
     - **ignoreRegex** `string|RegExp` default `/i18n-ignore-line/`: Regex to tell the extractor
-    to ignore the following line.
+    to ignore the current line.
 
 ### Merger options
 
