@@ -507,7 +507,7 @@ function addReference(refs, tran, opts) {
     }
     const reference = buildReference(refs, opts)
     let change = false
-    if (tran.comments.reference != reference) {
+    if (tran.comments.reference !== reference) {
         change = {
             'comments.reference': {
                 old: tran.comments.reference,

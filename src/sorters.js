@@ -22,7 +22,9 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const {Cast, Is} = require('utils-h')
+const {
+    types: {castToArray, isFunction},
+} = require('utils-h')
 
 /**
  * Extends every sorter with `asc` and `desc` properties. The `asc` property
@@ -30,11 +32,14 @@ const {Cast, Is} = require('utils-h')
  * inverted arguments.
  */
 function _extendSorters(sorters) {
-    sorters.filter(Is.Function).forEach(sorter => {
+    sorters.filter(isFunction).forEach(sorter => {
         sorter.asc = sorter
         sorter.desc = function (a, b) {
             return sorter.call(this, b, a)
         }
+        Object.defineProperty(sorter.desc, 'name', {
+            value: sorter.asc.name + 'Desc',
+        })
     })
 }
 
@@ -48,7 +53,7 @@ const Sort = {}
  * @param {string}
  * @return {integer}
  */
-Sort.lc = function (a, b) {
+Sort.lc = function sortLc(a, b) {
     return a.toLowerCase().localeCompare(b.toLowerCase())
 }
 
@@ -57,7 +62,7 @@ Sort.lc = function (a, b) {
  * @param {number}
  * @return {integer}
  */
-Sort.num = function (a, b) {
+Sort.num = function sortNum(a, b) {
     return a - b || 0
 }
 
@@ -66,7 +71,7 @@ Sort.num = function (a, b) {
  * @param {string}
  * @return {integer}
  */
-Sort.ref = function (a, b) {
+Sort.ref = function sortRef(a, b) {
     const [afile, aline] = a.split(':')
     const [bfile, bline] = b.split(':')
     return (
@@ -84,7 +89,7 @@ Sort.ref = function (a, b) {
  * @param {object}
  * @return {integer}
  */
-Sort.keyLc = function (a, b) {
+Sort.keyLc = function sortByKey(a, b) {
     return Sort.lc(a.key, b.key)
 }
 
@@ -93,7 +98,7 @@ Sort.keyLc = function (a, b) {
  * @param {object}
  * @return {integer}
  */
-Sort.loc = function (a, b) {
+Sort.loc = function sortLocs(a, b) {
     return (
         Sort.lc(String(a.file), String(b.file)) ||
         Sort.lc(String(a.filename), String(b.filename)) ||
@@ -107,9 +112,9 @@ Sort.loc = function (a, b) {
  * @param {array|string}
  * @return {integer}
  */
-Sort.refs = function (a, b) {
-    a = Cast.toArray(a)
-    b = Cast.toArray(b)
+Sort.refs = function sortRefs(a, b) {
+    a = castToArray(a)
+    b = castToArray(b)
     if (!a.length || !b.length) {
         if (a.length) {
             return -1
@@ -147,7 +152,7 @@ Sort.tran = {}
  * @param {object}
  * @return {integer}
  */
-Sort.tran.msgid = function (a, b) {
+Sort.tran.msgid = function sortByMsgid(a, b) {
     return Sort.lc(a.msgid, b.msgid)
 }
 
@@ -156,7 +161,7 @@ Sort.tran.msgid = function (a, b) {
  * @param {object}
  * @return {integer}
  */
-Sort.tran.file = function (a, b) {
+Sort.tran.file = function sortByFile(a, b) {
     const aref = (a.comments || {}).reference
     const bref = (b.comments || {}).reference
     if (aref && bref) {
@@ -178,7 +183,7 @@ Sort.tran.file = function (a, b) {
  * @param {object}
  * @return {integer}
  */
-Sort.tran.source = function (a, b) {
+Sort.tran.source = function sortInSourceOrder(a, b) {
     const asrc = this.sourceOrderHash[a.msgid]
     const bsrc = this.sourceOrderHash[b.msgid]
     if (asrc == null || bsrc == null) {

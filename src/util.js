@@ -98,7 +98,7 @@ class Util {
             err.code = error.code
             throw err
         }
-        if (result.status != 0) {
+        if (result.status !== 0) {
             const err = new ExecExitError(
                 `Git exited with status code ${result.status}`
             )
@@ -121,9 +121,9 @@ class Util {
             }
             if (attr.includes('?')) {
                 fileStatus = 'untracked'
-            } else if (attr == 'M ') {
+            } else if (attr === 'M ') {
                 fileStatus = 'staged'
-            } else if (attr == 'A ') {
+            } else if (attr === 'A ') {
                 fileStatus = 'added'
             } else {
                 // default catch-all
