@@ -384,14 +384,23 @@ function mergePoResult(po, messages) {
 
         // Add extracted comments.
         const cmts = castToArray(message.comments)
+        let cmtsChange
         if (cmts.length) {
-            const cmtsChange = addExtractedComment(cmts, tran)
-            if (found && cmtsChange) {
-                changes.push(cmtsChange)
+            cmtsChange = addExtractedComment(cmts, tran)
+        } else if (tran.comments && tran.comments.extracted) {
+            cmtsChange = {
+                'comments.extracted': {
+                    old: tran.comments.extracted,
+                    new: null,
+                }
             }
+            delete tran.comments.extracted
         }
 
         if (found) {
+            if (cmtsChange) {
+                changes.push(cmtsChange)
+            }
             // Message exists in source po.
             track.found[msgid] = info
             this.verbose(2, 'found', {msgid})
@@ -418,6 +427,11 @@ function mergePoResult(po, messages) {
         const {msgid} = tran
         if (msgid && !data.patch[msgid]) {
             this.verbose(1, 'missing', {msgid})
+            if (tran.comments) {
+                // Clear extracted comments and references.
+                delete tran.comments.extracted
+                delete tran.comments.reference
+            }
             track.missing[msgid] = {tran}
             data.patch[msgid] = tran
             this.emit('missing', tran)
@@ -470,7 +484,7 @@ function addExtractedComment(cmts, tran) {
     }
     const extracted = cmts.join('\n')
     let change = false
-    if (tran.comments.extracted != extracted) {
+    if (tran.comments.extracted !== extracted) {
         change = {
             'comments.extracted': {
                 old: tran.comments.extracted,
