@@ -91,7 +91,7 @@ class Merger extends Base {
         } else if (!isObject(this.opts.references)) {
             this.opts.references = {}
         }
-        checkSortOption(this.sort)
+        checkSortOption(this.opts.sort)
     }
 
     /**
@@ -579,7 +579,7 @@ function buildReferenceLines(built, opts) {
 function checkSortOption(value) {
     checkArg(
         value, 'opts.sort', it => (
-            it == null || isFunction(it) || Boolean(Sort.tran[it])
+            it == null || isFunction(it) || Sort.tran.hasOwnProperty(it)
         )
     )
 }

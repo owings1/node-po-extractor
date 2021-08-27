@@ -222,5 +222,15 @@ describe('Merger', () => {
             const merger = this.create()
             expect(merger.logLevel).to.equal(-1)
         })
+
+        it('should accept sort=msgid', function () {
+            this.create({sort: 'msgid'})
+        })
+
+        it('should throw for sort=toString', function () {
+            this.opts.sort = 'toString'
+            const err = ger(() => this.create())
+            expect(err.isArgumentError).to.equal(true)
+        })
     })
 })
