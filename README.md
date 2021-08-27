@@ -9,10 +9,8 @@ Utility for extracting i18n messages and merging them with gettext-po files.
 
 I wrote this as I am setting up i18n in a couple projects. There are a lot of
 utilities out there that do similar things, but I could not seem to get any of
-them to work the way I needed. So 
-
-I am putting this here in case anyone else finds some of it useful.
-I am in the process of writing tests, and I will be making breaking changes.
+them to work the way I needed. So  I am putting this here in case anyone else
+finds some of it useful.
 
 If you have any comments or suggestions, please drop me a line, or file an issue.
 

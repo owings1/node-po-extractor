@@ -101,13 +101,9 @@ class Util {
             const err = new ExecExitError(
                 `Git exited with status code ${result.status}`
             )
-            const {status, signal, pid, stderr} = result
-            update(err, {
-                status,
-                signal,
-                pid,
-                stderr: stderr.toString('utf-8'),
-            })
+            const {status, signal, pid} = result
+            const stderr = result.stderr.toString('utf-8')
+            update(err, {status, signal, pid, stderr})
             throw err
         }
         const lines = result.stdout.toString('utf-8').split('\n')
