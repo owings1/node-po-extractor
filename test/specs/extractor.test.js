@@ -181,6 +181,21 @@ describe('Extractor', () => {
         })
     })
 
+    describe('filter', () => {
+
+        it('should exclude ignore and * with filter function', function () {
+            const opts = {
+                filter: key => !['ignore', '*'].includes(key),
+            }
+            const msgs = this.create(opts)
+                .extract('src/filter.js')
+            const keys = msgs.map(msg => msg.key)
+            expect(keys).to.contain('keep').and
+                .to.not.contain('*').and
+                .to.not.contain('ignore')
+        })
+    })
+
     describe('ArgumentErrors', () => {
 
         it('addFiles missing globs', function () {

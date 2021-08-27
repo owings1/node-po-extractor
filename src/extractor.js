@@ -58,7 +58,7 @@
 // Dependency requires
 const {
     objects : {lget, lset, valueHash},
-    types   : {castToArray, typeOf},
+    types   : {castToArray, isFunction, typeOf},
 } = require('utils-h')
 const globby          = require('globby')
 const {transformSync} = require('@babel/core')
@@ -253,6 +253,9 @@ function extractFromCode(content, opts, log) {
     const commentIngoreRegex = opts.comments.ignoreRegex
         ? new RegExp(opts.comments.ignoreRegex)
         : null
+    const keyFilter = isFunction(opts.filter)
+        ? key => Boolean(key) && opts.filter.call(this, key)
+        : Boolean
     const keys = []
     const ignoredLineHash = {}
     const cidx = new CommentIndex
@@ -327,7 +330,7 @@ function extractFromCode(content, opts, log) {
                 log.warn('No argument found at position', opts.argPos, loc)
                 return
             }
-            getKeys(arg, log).filter(Boolean).forEach(key => {
+            getKeys(arg, log).filter(keyFilter).forEach(key => {
                 const msg = {key, loc}
                 msg.comment = makeComment(loc.start.line)
                 keys.push(msg)

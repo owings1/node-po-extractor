@@ -86,6 +86,8 @@ These options are common to both the `Extractor` and `Merger`.
 
 - **argPos** `integer` default `0`: The argument position of the message.
 
+- **filter** `function`: A filter function, receives key (msgid) as argument.
+
 - **members** `boolean` default `false`: Whether to include member calls, e.g. `obj.i18n()`.
 
 - **parser** `string|object` default `'flow'`: The babel parser to use, 'typescript' or 'flow'.
