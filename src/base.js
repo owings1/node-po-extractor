@@ -24,9 +24,9 @@
  */
 // Dependency requires
 const {
+    Logger,
     merging : {merge},
     types   : {castToArray, typeOf},
-    Logger,
 } = require('utils-h')
 const globby = require('globby')
 
@@ -40,14 +40,20 @@ const {checkArg} = require('./util.js')
 
 // Default options
 const Defaults = {
-    baseDir  : '.',
-    dryRun   : false,
-    verbose  : 0,
-    logging  : {},
+    context : '',
+    baseDir : '.',
+    verbose : 0,
+    logging : {},
 }
 
 class Base extends EventEmitter {
 
+    /**
+     * @constructor
+     * @throws {TypeError}
+     *
+     * @param {...object} (optional) The options, merged, in order.
+     */
     constructor(...opts) {
         super()
         this.opts = merge(Defaults, ...opts)
@@ -73,6 +79,12 @@ class Base extends EventEmitter {
         return globby.sync(globs)
     }
 
+    /**
+     * Get the path relative to the baseDir, if set.
+     *
+     * @param {string}
+     * @return {string}
+     */
     relPath(file) {
         const {baseDir} = this.opts
         if (baseDir) {
@@ -81,6 +93,12 @@ class Base extends EventEmitter {
         return file
     }
 
+    /**
+     * Resolve a path to the baseDir, if set.
+     *
+     * @param {string}
+     * @return {string}
+     */
     resolve(file) {
         const {baseDir} = this.opts
         if (baseDir) {
@@ -95,7 +113,7 @@ class Base extends EventEmitter {
      * @throws {TypeError}
      *
      * @param {integer} The verbose level of the message
-     * @param {...any} The message(s)
+     * @param {...*} The message(s)
      * @return {undefined}
      */
     verbose(vlevel, ...args) {
@@ -107,14 +125,14 @@ class Base extends EventEmitter {
     }
 
     /**
-     *
+     * Getter for logLevel (integer).
      */
     get logLevel() {
         return this.logger.logLevel
     }
 
     /**
-     *
+     * Setter for logLevel (integer or string).
      */
     set logLevel(level) {
         this.logger.logLevel = level

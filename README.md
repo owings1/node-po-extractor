@@ -62,8 +62,6 @@ These options are common to both the `Extractor` and `Merger`.
 
 - **context** `boolean` default `''`: The message context, `''` is the default context.
 
-- **dryRun** `boolean` default: `false`: Do everything but write files.
-
 - **verbose** `integer` default `0`: Set a value from `1` to `3` to enable more logging.
 
 - **logging** `object`: Logging options.
@@ -127,6 +125,9 @@ These options are common to both the `Extractor` and `Merger`.
     to ignore the current line.
 
 ### Merger options
+
+- **dryRun** `boolean` default: `false`: Do everything but write files. If the environment variable
+    `DRY_RUN` is set, then this is forced to `true`.
 
 - **gitCheck** `boolean` default `true`: Whether to check for uncommitted changes in git before
     writing to a file. Note that this will not check files that are ignored by a `.gitignore` file.

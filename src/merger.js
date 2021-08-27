@@ -59,8 +59,8 @@ const {
 
 // Default options.
 const Defaults = {
+    dryRun     : false,
     gitCheck   : true,
-    context    : '',
     replace    : false,
     sort       : 'source',
     forceSave  : false,
@@ -86,9 +86,7 @@ class Merger extends Base {
 
     /**
      * @constructor
-     *
      * @throws {ArgumentError}
-     *
      * @param {object} (optional) The options
      */
     constructor(opts) {
@@ -97,6 +95,9 @@ class Merger extends Base {
             this.opts.references = {...Defaults.references}
         } else if (!isObject(this.opts.references)) {
             this.opts.references = {}
+        }
+        if (Boolean(process.env.DRY_RUN)) {
+            this.opts.dryRun = true
         }
         checkSortOption(this.opts.sort)
     }
@@ -527,6 +528,7 @@ function addReference(refs, tran, opts) {
     }
     return change
 }
+
 /**
  * @param {array}
  * @param {object}
@@ -582,7 +584,7 @@ function buildReferenceLines(built, opts) {
 
 /**
  * @throws {ArgumentError}
- * @param {any}
+ * @param {*}
  * @return {undefined}
  */
 function checkSortOption(value) {
