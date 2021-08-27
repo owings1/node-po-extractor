@@ -53,11 +53,13 @@ class Util {
                     throw ret
                 }
                 throw new ArgumentError(`Invalid argument (${name}):` + (ret || arg))
-            } else if (exp.split('|').includes(argType)) {
+            }
+            const types = exp.split('|')
+            if (types.includes(argType)) {
                 continue
             }
             throw new TypeError(
-                `Argument (${name}) must be type ${exp}, got '${argType}'.`
+                `Argument (${name}) must be type ${types.join(' or ')}, got '${argType}'.`
             )
         }
         return Util

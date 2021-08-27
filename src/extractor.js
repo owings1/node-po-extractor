@@ -58,7 +58,7 @@
 // Dependency requires
 const {
     objects : {lget, lset, valueHash},
-    types   : {castToArray, isFunction, typeOf},
+    types   : {castToArray, isFunction, isObject, isString},
 } = require('utils-h')
 const globby          = require('globby')
 const {transformSync} = require('@babel/core')
@@ -439,7 +439,7 @@ function getCommentOpts(opts) {
     if (comments === true) {
         return {...Defaults.comments}
     }
-    if (typeOf(comments) !== 'object') {
+    if (!isObject(comments)) {
         return {}
     }
     return comments
@@ -460,17 +460,14 @@ function getCommentOpts(opts) {
  */
 function getBabelOpts(opts) {
     const {parser} = opts
-    const type = typeOf(parser)
-    if (type === 'object') {
+    checkArg(parser, 'opts.parser', 'string|object')
+    if (isObject(parser)) {
         return parser
     }
-    if (type === 'string') {
-        if (!Parsers[parser]) {
-            throw new ArgumentError(`Unknown parser: '${parser}'`)
-        }
-        return Parsers[parser].babel
+    if (!Parsers.hasOwnProperty(parser)) {
+        throw new ArgumentError(`Unknown parser: '${parser}'`)
     }
-    throw new ArgumentError(`Option 'parser' must be an object or string, got '${type}'`)
+    return Parsers[parser].babel
 }
 
 class CommentIndex {

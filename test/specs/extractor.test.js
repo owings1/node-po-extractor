@@ -210,7 +210,7 @@ describe('Extractor', () => {
 
         it('null parser in constructor', function () {
             const err = ger(() => this.create({parser: null}))
-            expect(err.name).to.equal('ArgumentError')
+            expect(err.name).to.equal('TypeError')
         })
     })
 
