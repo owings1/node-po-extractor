@@ -28,12 +28,12 @@ const fse = require('fs-extra')
 const path = require('path')
 const {resolve} = path
 const tmp = require('tmp')
-const {ger, merge} = require('../helpers/util')
-const Git = require('../helpers/git')
+const {ger, merge} = require('../helpers/util.js')
+const Git = require('../helpers/git.js')
 
 describe('Merger', () => {
 
-    const Merger = require('../../src/merger')
+    const Merger = require('../../src/merger.js')
 
     before(function () {
         this._tmpDir = tmp.dirSync().name

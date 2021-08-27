@@ -22,7 +22,7 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const Props = require('./static/errors.map')
+const Props = require('./static/errors.map.js')
 
 function addProps(err) {
     const name = err.name || err.constructor.name

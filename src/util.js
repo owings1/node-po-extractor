@@ -23,15 +23,15 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 const {
-    objects: {update, valueHash},
-    types: {isFunction, typeOf},
+    objects : {update, valueHash},
+    types   : {isFunction, typeOf},
 } = require('utils-h')
 
 const child_process = require('child_process')
 const path = require('path')
 const {EventEmitter} = require('events')
 
-const {ArgumentError, ExecExitError, ExecResultError} = require('./errors')
+const {ArgumentError, ExecExitError, ExecResultError} = require('./errors.js')
 
 class Util {
 

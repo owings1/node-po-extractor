@@ -23,6 +23,11 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 // Dependency requires
+const {
+    merging : {merge},
+    types   : {castToArray, typeOf},
+    Logger,
+} = require('utils-h')
 const globby = require('globby')
 
 // Node requires
@@ -30,8 +35,6 @@ const {EventEmitter} = require('events')
 const fs = require('fs')
 const path = require('path')
 
-const utilh = require('utils-h')
-const {Cast, Logger, merge, typeOf} = utilh
 // Package requires
 const {checkArg} = require('./util.js')
 
@@ -66,7 +69,7 @@ class Base extends EventEmitter {
     }
 
     glob(globs) {
-        globs = Cast.toArray(globs).map(glob => this.resolve(glob))
+        globs = castToArray(globs).map(glob => this.resolve(glob))
         return globby.sync(globs)
     }
 

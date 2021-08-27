@@ -48,8 +48,8 @@ const fs   = require('fs')
 const path = require('path')
 
 // Package requires
-const Base = require('./base')
-const Sort = require('./sorters')
+const Base = require('./base.js')
+const Sort = require('./sorters.js')
 const {checkArg, checkMax, gitFileStatus} = require('./util.js')
 const {
     DuplicateKeyError,
