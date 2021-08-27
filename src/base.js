@@ -44,7 +44,6 @@ const Defaults = {
     dryRun   : false,
     gitCheck : true,
     verbose  : 0,
-    logger   : null,
     logging  : {},
 }
 
@@ -53,9 +52,7 @@ class Base extends EventEmitter {
     constructor(...opts) {
         super()
         this.opts = merge(Defaults, ...opts)
-        if (!this.logger) {
-            this.logger = new Logger(this.opts.logging)
-        }
+        this.logger = new Logger(this.opts.logging)
         this.logLevel = this.opts.logging.logLevel
     }
 
@@ -139,44 +136,16 @@ class Base extends EventEmitter {
     /**
      *
      */
-    get logger() {
-        return this.opts.logger
-    }
-
-    /**
-     *
-     */
-    set logger(logger) {
-        this.opts.logger = logger
-        if ('logLevel' in logger) {
-            logger.logLevel = this.opts.logging.logLevel
-        }
-        if (logger instanceof Logger) {
-             // store a reference to propagate runtime changes.
-             this.opts.logging = this.logger.opts
-        }
-    }
-
-    /**
-     *
-     */
     get logLevel() {
-        if ('logLevel' in this.logger) {
-            return this.logger.logLevel
-        }
-        return this.opts.logging.logLevel
+        return this.logger.logLevel
     }
 
     /**
      *
      */
     set logLevel(level) {
-        if ('logLevel' in this.logger) {
-            this.logger.logLevel = level
-            this.opts.logging.logLevel = this.logger.logLevel
-        } else {
-            this.opts.logging.logLevel = level
-        }
+        this.logger.logLevel = level
+        this.opts.logging.logLevel = this.logger.logLevel
     }
 
     static checkGlobArg(value) {
