@@ -88,6 +88,7 @@ const Defaults = {
     members  : false,
     comments : {
         extract     : true,
+        mchar       : '.',
         keyRegex    : /i18n-extract (.+)/,
         ignoreRegex : /i18n-ignore-line/,
     },
@@ -234,6 +235,28 @@ function addFileContent(file, content) {
     return msgs
 }
 
+function formatComment(str, opts) {
+    if (str.trim().length === 0) {
+        return null
+    }
+    const rawLines = str.replace(/\r\n/g, '\n').split('\n')
+    if (rawLines.length === 1) {
+        return rawLines[0].trim()
+    }
+    // Multi-line comment. Trim lines and check for formatting indicator.
+    const {mchar} = opts.comments
+    const isFormatted = Boolean(mchar) && mchar.includes(str[0])
+    return rawLines.map((line, i) => {
+        if (isFormatted && i === 0) {
+            line = line.substr(1)
+        }
+        line = line.trim()
+        if (isFormatted && line[0] === '*') {
+            line = line.substr(1).trim()
+        }
+        return line
+    }).join('\n').trim() || null
+}
 /**
  * Adapted from:
  *
@@ -262,9 +285,8 @@ function extractFromCode(content, opts, log) {
     const makeComment = keyLine => {
         const cmts = cidx.forKeyAt(keyLine)
         cidx.remove(cmts)
-        return cmts.map(it => it.value.trim())
-            .filter(Boolean)
-            .join('\n') || null
+        return cmts.map(it => formatComment(it.value, opts))
+            .join('\n').trim() || null
     }
     const {ast} = transformSync(content, getBabelOpts(opts))
     if (opts.comments.extract) {
