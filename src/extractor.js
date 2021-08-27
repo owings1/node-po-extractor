@@ -246,7 +246,7 @@ function addFileContent(file, content) {
  */
 function extractFromCode(content, opts, log) {
     const markers = arrayUnique(castToArray(opts.marker))
-    const markersHash = valueHash(markers)
+    const markersHash = valueHash(markers, null)
     const commentKeyRegex = opts.comments.keyRegex
         ? new RegExp(opts.comments.keyRegex)
         : null
@@ -312,7 +312,7 @@ function extractFromCode(content, opts, log) {
                 (
                     opts.members &&
                     type === 'MemberExpression' &&
-                    markersHash.hasOwnProperty(property.name)
+                    markersHash[property.name]
                 )
                 //||markers.some(marker => path.get('callee').matchesPattern(marker))
             )
