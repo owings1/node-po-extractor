@@ -99,6 +99,27 @@ These options are common to both the `Extractor` and `Merger`.
     - **extract** `boolean` default `true`: Extract comments from the preceeding line to include
     in the po file. See [this page for more details][po-ref].
 
+    - **fchars** `string|array` default `_.*`: Formatting indicator chars for multi-line comments.
+    If a comment starts with one of the chars, then any `*` character at the beginning of a (trimmed)
+    line will be removed. For example:
+
+    ```javascript
+    /*_
+     * Long comment ...
+     * on multiple lines
+     */
+    __('message.id')
+    ```
+
+    will render as:
+
+    ```po
+    #. Long comment ...
+    #. on multiple lines
+    msgid "message.id"
+    msgstr ""
+    ```
+
     - **keyRegex** `string|RegExp` default `/i18n-extract (.+)/`: Regex to extract additional
     keys from comments.
 

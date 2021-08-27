@@ -88,7 +88,7 @@ const Defaults = {
     members  : false,
     comments : {
         extract     : true,
-        mchar       : '.',
+        fchars      : '_.*',
         keyRegex    : /i18n-extract (.+)/,
         ignoreRegex : /i18n-ignore-line/,
     },
@@ -235,6 +235,13 @@ function addFileContent(file, content) {
     return msgs
 }
 
+/**
+ * Format an extracted comment string.
+ *
+ * @param {string} The comment
+ * @param {object} The options
+ * @return {string|null} The formatted string
+ */
 function formatComment(str, opts) {
     if (str.trim().length === 0) {
         return null
@@ -244,8 +251,8 @@ function formatComment(str, opts) {
         return rawLines[0].trim()
     }
     // Multi-line comment. Trim lines and check for formatting indicator.
-    const {mchar} = opts.comments
-    const isFormatted = Boolean(mchar) && mchar.includes(str[0])
+    const {fchars} = opts.comments
+    const isFormatted = Boolean(fchars) && fchars.includes(str[0])
     return rawLines.map((line, i) => {
         if (isFormatted && i === 0) {
             line = line.substr(1)
