@@ -1,15 +1,19 @@
 #!/usr/bin/env node
-const globby  = require('globby')
-const {merge} = require('utilh')
+const {
+    merging: {merge},
+    objects: {revalue},
+    strings: {stringWidth},
+    types  : {isFunction},
+} = require('utils-h')
+const globby = require('globby')
 
+const fs = require('fs')
+const path = {basename, dirname, relative, resolve} = require('path')
 const chproc = require('child_process')
-const fs     = require('fs')
-const path   = require('path')
-const {basename, dirname, relative, resolve} = path
 
-const {gitFileStatus} = require('../src/util')
-const Base = require('./util/base')
-const {ScriptError} = require('../src/errors')
+const {gitFileStatus} = require('../src/util.js')
+const Base = require('./util/base.js')
+const {ScriptError} = require('../src/errors.js')
 
 const EgScript = 'example.js'
 const Readme = 'README.md'
@@ -21,7 +25,7 @@ const TemplateFile = resolve(__dirname, 'res/example-template.md')
 const PoBeginTag = '<po-content>'
 const PoEndTag = '</po-content>'
 
-class ExamplesScript extends Base {
+const ExamplesScript = module.exports = class extends Base {
 
     static flags() {
         return {
@@ -35,19 +39,13 @@ class ExamplesScript extends Base {
     }
 
     setup() {
-        const {cmd, opts, logger} = this
+        super.setup()
+        const {opts, logger} = this
         if (opts.silent) {
             logger.logLevel = 0
         } else if (opts.quiet) {
             logger.logLevel = 1
         }
-        super.setup()
-    }
-
-    help() {
-        const {logger} = this
-        logger.info('Usage: examples <cmd> [options]')
-        logger.info('Available commands: run, build, help')
     }
 
     cmd_list() {
@@ -228,9 +226,6 @@ class ExamplesScript extends Base {
     }
 }
 
-module.exports = ExamplesScript
-
 if (require.main === module) {
-    new module.exports(true, process.argv.slice(2)).run()
+    new ExamplesScript(true, process.argv).run()
 }
-

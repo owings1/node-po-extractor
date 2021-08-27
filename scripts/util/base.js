@@ -1,67 +1,54 @@
+const {
+    Logger,
+    objects: {revalue, update},
+    strings: {stringWidth},
+    types  : {isFunction},
+} = require('utils-h')
 
-const {ScriptError} = require('../../src/errors')
+const path = {basename} = require('path')
+const {ScriptError} = require('../../src/errors.js')
 
-const {isFunction} = require('../../src/util')
-const {Logger} = require('console-utils-h')
+const SyArgv = Symbol('argv')
+const CmdPfx = 'cmd_'
 
-class BaseScript {
+module.exports = class BaseScript {
 
     constructor(isMain, argv) {
         this.name = this.constructor.name
         this.logger = new Logger
-        this.isMain = isMain || require.main === module
-        argv = argv || []
-        this.cmd = argv[0] || 'help'
-        const {opts, args} = this.parse(argv.slice(1))
-        this.opts = opts
-        this.args = args
+        this.isMain = isMain
+        this[SyArgv] = argv.slice()
     }
 
+    setup() {}
+
+    teardown(err = null) {}
+
     run() {
+        const {logger} = this
+        const argv = this[SyArgv]
+        const cmd = argv[2] || 'help'
+        if (cmd === 'help') {
+            logger.print(help.call(this))
+            return exit.call(this, 0)
+        }
+        const method = CmdPfx + cmd
+        if (!isFunction(this[method])) {
+            logger.print(help.call(this))
+            logger.error('Unknown command:', cmd)
+            return exit.call(this, 1)
+        }
+        this.cmd = cmd
+        update(this, this.parse(argv.slice(3)))
         this.setup()
-        const {logger, cmd} = this
         let err
-        const method = ['cmd', cmd || ''].join('_')
         try {
-            if (typeof this[method] == 'function') {
-                this[method]()
-                return
-            }
-            switch (cmd) {
-                case 'help':
-                    this.help()
-                    break
-                default:
-                    logger.error('Unknown cmd:', cmd)
-                    this.help()
-                    return this.exit(1)
-            }
+            this[method]()
         } catch (e) {
             err = e
         } finally {
             this.teardown(err)
-            this.exit(err)
-        }
-    }
-
-    help() {
-        this.logger.info('Usage: script <cmd>')
-    }
-
-    exit(code = 0) {
-        if (this.isMain) {
-            if (code instanceof Error) {
-                this.logger.error(code)
-                code = 2
-            }
-            process.exit(code)
-            return
-        }
-        if (code instanceof Error) {
-            throw code
-        }
-        if (code !== 0) {
-            throw new ScriptError(`${this.name} script exit code ${code}`)
+            exit.call(this, err)
         }
     }
 
@@ -75,14 +62,7 @@ class BaseScript {
             return false
         }
         const opts = {}
-        let flags
-        if (isFunction(this.constructor.flags)) {
-            flags = this.constructor.flags()
-        } else if (this.constructor.Flags) {
-            flags = this.constructor.Flags
-        } else {
-            flags = {}
-        }
+        const flags = getFlags.call(this)
         Object.entries(flags).forEach(([opt, arr]) => {
             opts[opt] = checkOpt(...arr)
         })
@@ -95,14 +75,56 @@ class BaseScript {
         }
         return {opts, args}
     }
+}
 
-    setup() {
-        
+function exit(code = 0) {
+    if (this.isMain) {
+        if (code instanceof Error) {
+            this.logger.error(code)
+            code = 2
+        }
+        process.exit(code)
+        return
     }
-
-    teardown(err = null) {
-        
+    if (code instanceof Error) {
+        throw code
+    }
+    if (code !== 0) {
+        throw new ScriptError(`${this.name} script exit code ${code}`)
     }
 }
 
-module.exports = BaseScript
+function help() {
+    const script = basename(this[SyArgv][1])
+    const cmds = getCmds.call(this)
+    const flags = revalue(getFlags.call(this), it => it.join(', '))
+    const flagWidth = Math.max(...Object.values(flags).map(stringWidth))
+    const optWidth = Math.max(...Object.keys(flags).map(stringWidth))
+    const flagstrs = Object.entries(flags).map(([opt, flagstr]) => {
+        return [flagstr.padEnd(flagWidth, ' '), `set ${opt} option`].join('   ')
+    }).flat()
+    const lines = [
+        'Usage:',
+        `    ${script} <command> [options]`,
+        '',
+        'Available commands:',
+        '    ' + cmds.join(', '),
+        '',
+        'Flags:',
+        ...flagstrs.map(line => '    ' + line),
+    ]
+    return lines.join('\n')
+}
+
+function getFlags() {
+    return isFunction(this.constructor.flags) ? this.constructor.flags() : {}
+}
+
+function getCmds() {
+    return Object.getOwnPropertyNames(this.constructor.prototype)
+        .filter(
+            name => name.indexOf(CmdPfx) ===  0 && isFunction(this[name])
+        ).map(
+            name => name.substr(CmdPfx.length)
+        )
+}

@@ -1,31 +1,32 @@
 #!/usr/bin/env node
-const chalk  = require('chalk')
-const utilh  = require('console-utils-h')
-const {arrayHash, arraySum} = utilh.arrays
-const {ucfirst} = utilh.strings
-
-const fs     = require('fs')
-const fse    = require('fs-extra')
-const path   = require('path')
-const {dirname, relative, resolve} = path
-const Vm = require('vm')
-const Base = require('./util/base')
-const Diffs = require('./util/diffs')
-const Errors = require('../src/errors')
 const {
-    lget,
-    lset,
-} = require('../src/util')
+    colors  : {Chalk},
+    objects : {lget, lset},
+    strings : {ucfirst},
+} = require('utils-h')
+
+const Vm = require('vm')
+const fs = require('fs')
+const fse = require('fs-extra')
+const path = {dirname, relative, resolve} = require('path')
+const {expect} = require('chai')
+
+const Base = require('./util/base.js')
+const Diffs = require('./util/diffs.js')
+const Errors = require('../src/errors.js')
 
 const BaseDir = resolve(__dirname, '..')
 const OutFile = resolve(BaseDir, 'src/static/errors.map.js')
-const {expect} = require('chai')
 
-class ErrorsScript extends Base {
+const chalk = new Chalk
+
+const ErrorsScript = module.exports = class extends Base {
 
     static flags() {
         return {
-            verbose: ['-v', '--verbose']
+            verbose : ['-v', '--verbose'],
+            print   : ['-p', '--print'],
+            dryrun  : ['-t', '--test', '--dryrun'],
         }
     }
 
@@ -55,7 +56,7 @@ class ErrorsScript extends Base {
     }
 
     cmd_build() {
-        const {logger} = this
+        const {logger, opts} = this
         logger.info('Building result')
         const result = this.buildResult()
         this.logSummary(result)
@@ -65,14 +66,12 @@ class ErrorsScript extends Base {
         this.testFileContent(content, result)
         logger.info('OK')
         logger.info('Saving')
-        this.writeFile(OutFile, content)
+        if (opts.dryrun) {
+            logger.warn('Not writing file in dryrun mode')
+        } else {
+            this.writeFile(OutFile, content)
+        }
         logger.info('Done')
-    }
-
-    help() {
-        const {logger} = this
-        logger.info('Usage: errors <cmd>')
-        logger.info('Available commands: info, build, help')
     }
 
     logResultSummary(result) {
@@ -257,8 +256,6 @@ function abck(m, cb) {
     })
 }
 
-module.exports = ErrorsScript
-
 if (require.main === module) {
-    new module.exports(true, process.argv.slice(2)).run()
+    new ErrorsScript(true, process.argv).run()
 }
