@@ -15,7 +15,7 @@ extractor.addFiles(globs, encoding).getMessages()
 
 **Returns**: `array` Extracted message objects.
 
-**Throws**: `ArgumentError`
+**Throws**: `ArgumentError`, `TypeError`
 
 ### `extractor.addFile(file, encoding = null)`
 
@@ -28,7 +28,7 @@ Extract messges from a single file and add them to the index.
 
 **Returns**: `self`
 
-**Throws**: `ArgumentError`
+**Throws**: `TypeError`
 
 ### `extractor.addFiles(globs, encoding = null)`
 
@@ -41,7 +41,7 @@ Extract messges from files and add them to the index.
 
 **Returns**: `self`
 
-**Throws**: `ArgumentError`
+**Throws**: `ArgumentError`, `TypeError`
 
 ### `extractor.getMessages()`
 
@@ -70,7 +70,7 @@ Update a po file with the extracted messages.
 
 **Emits**: **beforeSave**
 
-**Throws**: `ArgumentError`, `GitCheckError`
+**Throws**: `GitCheckError`, `TypeError`
 
 ### `mergePos(globs, messages)`
 
@@ -85,7 +85,7 @@ Update po files with the extracted messages.
 
 **Emits**: **beforeSave**
 
-**Throws**: `ArgumentError`, `GitCheckError`
+**Throws**: `ArgumentError`, `GitCheckError`, `TypeError`
 
 ### `merger.mergePoTo(sourceFile, destFile, messages)`
 
@@ -101,7 +101,7 @@ Update a po file with the extracted messages.
 
 **Emits**: **beforeSave**
 
-**Throws**: `ArgumentError`, `GitCheckError`
+**Throws**: `GitCheckError`, `TypeError`
 
 ### `merger.mergePosTo(sourceGlobs, destDir, messages)`
 
@@ -117,7 +117,7 @@ Update a po files with the extracted messages.
 
 **Emits**: **beforeSave**
 
-**Throws**: `ArgumentError`, `GitCheckError`
+**Throws**: `ArgumentError`, `GitCheckError`, `TypeError`
 
 ### `merger.getMergePoResult(sourceFile, messages)`
 
@@ -152,4 +152,4 @@ Get the result object for merging a po file. The result object is of the form:
 
 **Returns**: `object` The merge info result object.
 
-**Throws**: `ArgumentError`
+**Throws**: `TypeError`

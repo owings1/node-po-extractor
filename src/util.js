@@ -44,21 +44,20 @@ class Util {
         while (args.length) {
             const [arg, name, exp] = args.splice(0, 3)
             const argType = typeOf(arg)
-            let ret
             if (isFunction(exp)) {
-                ret = exp(arg, argType)
+                const ret = exp(arg, argType)
                 if (ret === true) {
                     continue
                 }
                 if (ret instanceof Error) {
                     throw ret
                 }
-                ret = `Invalid argument (${name}):` + (ret || arg)
+                throw new ArgumentError(`Invalid argument (${name}):` + (ret || arg))
             } else if (exp.split('|').includes(argType)) {
                 continue
             }
-            throw new ArgumentError(
-                ret || `Argument (${name}) must be type ${exp}, got '${argType}'.`
+            throw new TypeError(
+                `Argument (${name}) must be type ${exp}, got '${argType}'.`
             )
         }
         return Util

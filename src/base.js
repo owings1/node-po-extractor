@@ -62,7 +62,7 @@ class Base extends EventEmitter {
     /**
      * Read a file.
      *
-     * @throws {ArgumentError}
+     * @throws {TypeError}
      *
      * @param {string} The file path
      * @return {buffer} The file content
@@ -122,7 +122,7 @@ class Base extends EventEmitter {
     /**
      * Logs a message according to verbose setting.
      *
-     * @throws {ArgumentError}
+     * @throws {TypeError}
      *
      * @param {integer} The verbose level of the message
      * @param {...any} The message(s)

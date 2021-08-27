@@ -41,12 +41,12 @@ describe('Util', () => {
 
             it('should fail for string', function () {
                 const err = ger(() => checkArg('', 'arg', 'array'))
-                expect(err.name).to.equal('ArgumentError')
+                expect(err.name).to.equal('TypeError')
             })
 
             it('should fail for object', function () {
                 const err = ger(() => checkArg({}, 'arg', 'array'))
-                expect(err.name).to.equal('ArgumentError')
+                expect(err.name).to.equal('TypeError')
             })
 
         })
@@ -87,7 +87,7 @@ describe('Util', () => {
 
             it('should fail for null', function () {
                 const err = ger(() => checkArg(null, 'arg', 'string|array'))
-                expect(err.name).to.equal('ArgumentError')
+                expect(err.name).to.equal('TypeError')
             })
         })
     })

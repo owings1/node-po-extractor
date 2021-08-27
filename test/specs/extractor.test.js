@@ -185,7 +185,7 @@ describe('Extractor', () => {
 
         it('addFiles missing globs', function () {
             const err = ger(() => this.create().addFiles())
-            expect(err.name).to.equal('ArgumentError')
+            expect(err.name).to.equal('TypeError')
         })
 
         it('unknown parser in constructor', function () {

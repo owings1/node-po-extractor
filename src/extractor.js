@@ -106,6 +106,8 @@ class Extractor extends Base {
     /**
      * @constructor
      *
+     * @throws {ArgumentError}
+     *
      * @param {object} (optional) The options
      */
     constructor(opts) {
@@ -121,6 +123,7 @@ class Extractor extends Base {
     * is equivalent to calling `this.addFiles().getMessages()`.
     *
     * @throws {ArgumentError}
+    * @throws {TypeError}
     *
     * @param {array|string} File path(s)/glob(s)
     * @param {string} (optional) File encoding, default is `opts.encoding`
@@ -134,6 +137,7 @@ class Extractor extends Base {
      * Extract messages from source files and add them to the index.
      *
      * @throws {ArgumentError}
+     * @throws {TypeError}
      *
      * @param {array|string} File path(s)/glob(s)
      * @param {string} (optional) File encoding, default is `opts.encoding`
@@ -154,7 +158,7 @@ class Extractor extends Base {
     /**
      * Extract messges from a file and add them to the index.
      *
-     * @throws {ArgumentError}
+     * @throws {TypeError}
      *
      * @param {string} The file
      * @param {string} (optional) File encoding, default is `opts.encoding`

@@ -97,9 +97,9 @@ class Merger extends Base {
     /**
      * Update a po file with the extracted messages.
      *
-     * @throws {ArgumentError}
      * @throws {ExecExitError}
      * @throws {ExecResultError}
+     * @throws {TypeError}
      * @throws {UnsavedChangesError}
      *
      * @emits `beforeSave`
@@ -135,6 +135,7 @@ class Merger extends Base {
      * @throws {ArgumentError}
      * @throws {ExecExitError}
      * @throws {ExecResultError}
+     * @throws {TypeError}
      * @throws {UnsavedChangesError}
      *
      * @emits `beforeSave`
@@ -161,9 +162,9 @@ class Merger extends Base {
     /**
      * Update a po file with the extracted messages.
      *
-     * @throws {ArgumentError}
      * @throws {ExecExitError}
      * @throws {ExecResultError}
+     * @throws {TypeError}
      * @throws {UnsavedChangesError}
      *
      * @emits `beforeSave`
@@ -197,6 +198,7 @@ class Merger extends Base {
      * @throws {ArgumentError}
      * @throws {ExecExitError}
      * @throws {ExecResultError}
+     * @throws {TypeError}
      * @throws {UnsavedChangesError}
      *
      * @emits `beforeSave`
@@ -242,7 +244,7 @@ class Merger extends Base {
     /**
      * Get the result object for merging a po file.
      *
-     * @throws {ArgumentError}
+     * @throws {TypeError}
      *
      * @param {string} The source po file
      * @param {array} The messages
@@ -268,7 +270,7 @@ class Merger extends Base {
     /**
      * Returns a new object with keys sorted.
      *
-     * @throws {ArgumentError}
+     * @throws {TypeError}
      *
      * @param {object} The tranlations
      * @param {object} The source order hash from the original po file
@@ -292,9 +294,9 @@ class Merger extends Base {
  *
  * @private
  *
- * @throws {ArgumentError}
  * @throws {DuplicateKeyError}
  * @throws {MissingContextError}
+ * @throws {TypeError}
  *
  * @emits `added`
  * @emits `found`
