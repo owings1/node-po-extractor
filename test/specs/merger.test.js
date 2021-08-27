@@ -120,6 +120,32 @@ describe('Merger', () => {
                 .to.not.contain('extracted-existing')
             expect(strans.m2.comments.extracted).to.contain('extracted-existing')
         })
+
+        it('should remove extracted comments from missing translation', function () {
+            this.opts.replace = false
+            const msgs = [
+                {context: '', key: 'm1', refs: ['file1.js:1']},
+            ]
+            const {po: {translations}} = this.create()
+                .getMergePoResult('locale/missing1.po', msgs)
+            const trans = translations['']
+            const keys = Object.keys(trans)
+            expect(keys).to.include.members(['m1', 'missing1'])
+            expect(trans.missing1.comments).to.not.have.property('extracted')
+        })
+
+        it('should remove references from missing translation', function () {
+            this.opts.replace = false
+            const msgs = [
+                {context: '', key: 'm1', refs: ['file1.js:1']},
+            ]
+            const {po: {translations}} = this.create()
+                .getMergePoResult('locale/missing1.po', msgs)
+            const trans = translations['']
+            const keys = Object.keys(trans)
+            expect(keys).to.include.members(['m1', 'missing2'])
+            expect(trans.missing2.comments).to.not.have.property('reference')
+        })
     })
 
     describe('merge', () => {

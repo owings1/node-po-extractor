@@ -1,0 +1,12 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=utf-8\n"
+"Language: en\n"
+
+#. extracted-missing
+msgid "missing1"
+msgstr "missing1t"
+
+#: missing.js:1
+msgid "missing2"
+msgstr "missing2t"
