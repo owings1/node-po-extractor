@@ -33,16 +33,12 @@ const path = require('path')
 const utilh = require('utils-h')
 const {Cast, Logger, merge, typeOf} = utilh
 // Package requires
-const {checkArg, gitFileStatus} = require('./util')
-const {UnsavedChangesError} = require('./errors')
-
-const GitStatusOk = ['clean', 'added', 'staged']
+const {checkArg} = require('./util.js')
 
 // Default options
 const Defaults = {
     baseDir  : '.',
     dryRun   : false,
-    gitCheck : true,
     verbose  : 0,
     logging  : {},
 }
@@ -67,32 +63,6 @@ class Base extends EventEmitter {
     readFile(file) {
         checkArg(file, 'file', 'string')
         return fs.readFileSync(this.resolve(file))
-    }
-
-    /**
-     * Write to a file.
-     *
-     * @throws {ArgumentError}
-     * @throws {ExecExitError}
-     * @throws {ExecResultError}
-     * @throws {UnsavedChangesError}
-     *
-     * @param {string} The file path
-     * @param {buffer} The content to write
-     * @return {undefined}
-     */
-    writeFile(file, content) {
-        checkArg(
-            file    , 'file'    , 'string',
-            content , 'content' , 'buffer',
-        )
-        const rel = this.relPath(file)
-        this._checkGitDirty(file)
-        if (this.opts.dryRun) {
-            this.logger.warn('Dry run only, not writing', {file: rel})
-        } else {
-            fs.writeFileSync(file, content)
-        }
     }
 
     glob(globs) {
@@ -151,54 +121,6 @@ class Base extends EventEmitter {
     static checkGlobArg(value) {
         checkArg(value, 'globs', 'string|array')
         return Boolean(value.length) || 'Argument (globs) cannot be empty'
-    }
-
-    /**
-     * @private
-     *
-     * @throws {ExecExitError}
-     * @throws {ExecResultError}
-     * @throws {UnsavedChangesError}
-     *
-     * @param {string} The file path
-     * @return {undefined}
-     */
-    _checkGitDirty(file) {
-        const log = this.logger
-        const {gitCheck} = this.opts
-        const rel = this.relPath(file)
-        this.verbose(1, 'gitCheck', {gitCheck}, {file: rel})
-        if (!gitCheck) {
-            return
-        }
-        let fileStatus
-        try {
-            fileStatus = gitFileStatus(this.resolve(file)).fileStatus
-            if (!GitStatusOk.includes(fileStatus)) {
-                throw new UnsavedChangesError(
-                    `Refusing to clobber ${fileStatus} changes in git`
-                )
-            }
-        } catch (err) {
-            log.error(err, {throwing: true})
-            if (err.name == 'ExecResultError') {
-                log.error('Git execution failed with', {code: err.code})
-            } else if (err.name == 'ExecExitError') {
-                const {status, stderr} = err
-                log.error('Git command exited with', {status})
-                if (stderr) {
-                    log.warn('<stderr>\n' + stderr)
-                    log.warn('</stderr>')
-                    delete err.stderr
-                }
-            } else if (err.name == 'UnsavedChangesError') {
-                log.error('Unsaved changes in git for', {file: rel}, {fileStatus})
-                log.error('Commit, stash, or abandon the changes before continuing')
-            }
-            log.info('Use option', {gitCheck: false}, 'to ignore this check.')
-            throw err
-        }
-        this.verbose(1, 'gitCheck', {fileStatus})
     }
 }
 

@@ -64,11 +64,6 @@ These options are common to both the `Extractor` and `Merger`.
 
 - **context** `boolean` default `''`: The message context, `''` is the default context.
 
-- **gitCheck** `boolean` default `true`: Whether to check for uncommitted changes in git before
-    writing to a file. Note that this will not check files that are ignored by a `.gitignore` file.
-    If you are not writing to a git repository, or you do not have git installed, you must set this
-    to `false`.
-
 - **dryRun** `boolean` default: `false`: Do everything but write files.
 
 - **verbose** `integer` default `0`: Set a value from `1` to `3` to enable more logging.
@@ -111,6 +106,11 @@ These options are common to both the `Extractor` and `Merger`.
     to ignore the current line.
 
 ### Merger options
+
+- **gitCheck** `boolean` default `true`: Whether to check for uncommitted changes in git before
+    writing to a file. Note that this will not check files that are ignored by a `.gitignore` file.
+    If you are not writing to a git repository, or you do not have git installed, you must set this
+    to `false`.
 
 - **replace** `boolean` default `false`: Whether to remove translations from the po file that
     are not found in the extracted messages. The default is to keep the messages.

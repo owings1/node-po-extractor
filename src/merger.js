@@ -50,11 +50,16 @@ const path = require('path')
 // Package requires
 const Base = require('./base')
 const Sort = require('./sorters')
-const {checkArg, checkMax} = require('./util')
-const {DuplicateKeyError, MissingContextError} = require('./errors')
+const {checkArg, checkMax, gitFileStatus} = require('./util.js')
+const {
+    DuplicateKeyError,
+    MissingContextError,
+    UnsavedChangesError,
+} = require('./errors.js')
 
 // Default options.
 const Defaults = {
+    gitCheck   : true,
     context    : '',
     replace    : false,
     sort       : 'source',
@@ -74,6 +79,8 @@ const Defaults = {
         },
     },
 }
+
+const GitStatusOk = ['clean', 'added', 'staged']
 
 class Merger extends Base {
 
@@ -115,14 +122,14 @@ class Merger extends Base {
         )
         const {forceSave} = this.opts
         const rel = this.relPath(file)
-        this._checkGitDirty(file)
+        checkGitDirty.call(this, file)
         const result = this.getMergePoResult(file, messages)
         result.file = rel
         const {content, isChange, sourceContent} = result
         if (isChange || forceSave || !buffersEqual(content, sourceContent)) {
             this.emit('beforeSave', file, content)
             this.logger.info('Writing', {file: rel})
-            this.writeFile(file, content)
+            writeFile.call(this, file, content)
         } else {
             this.logger.info('No changes to write', {file: rel})
         }
@@ -150,7 +157,7 @@ class Merger extends Base {
             messages , 'messages' , 'array',
         )
         const files = this.glob(globs)
-        files.forEach(file => this._checkGitDirty(file))
+        files.forEach(file => checkGitDirty.call(this, file))
         if (files.length) {
             this.logger.info('Updating', files.length, 'po files')
         } else {
@@ -180,7 +187,7 @@ class Merger extends Base {
             destFile   , 'destFile'   , 'string',
             messages   , 'messages'   , 'array',
         )
-        this._checkGitDirty(destFile)
+        checkGitDirty.call(this, destFile)
         const rel = this.relPath(destFile)
         const result = this.getMergePoResult(sourceFile, messages)
         result.file = rel
@@ -188,7 +195,7 @@ class Merger extends Base {
         const {content} = result
         this.emit('beforeSave', destFile, content)
         this.logger.info('Writing', {file: rel})
-        this.writeFile(destFile, content)
+        writeFile.call(this, destFile, content)
         return result
     }
 
@@ -233,7 +240,7 @@ class Merger extends Base {
         destFiles.forEach(file => {
             fse.ensureDirSync(path.dirname(file))
             if (fs.existsSync(file)) {
-                this._checkGitDirty(file)
+                checkGitDirty.call(this, file)
             }
         })
         return sourceFiles.map((sourceFile, i) =>
@@ -584,6 +591,82 @@ function checkSortOption(value) {
             it == null || isFunction(it) || Sort.tran.hasOwnProperty(it)
         )
     )
+}
+
+/**
+ * @private
+ *
+ * @throws {ExecExitError}
+ * @throws {ExecResultError}
+ * @throws {UnsavedChangesError}
+ *
+ * @param {string} The file path
+ * @return {undefined}
+ */
+function checkGitDirty(file) {
+    const log = this.logger
+    const {gitCheck} = this.opts
+    const rel = this.relPath(file)
+    this.verbose(1, 'gitCheck', {gitCheck}, {file: rel})
+    if (!gitCheck) {
+        return
+    }
+    let fileStatus
+    try {
+        fileStatus = gitFileStatus(this.resolve(file)).fileStatus
+        if (!GitStatusOk.includes(fileStatus)) {
+            throw new UnsavedChangesError(
+                `Refusing to clobber ${fileStatus} changes in git`
+            )
+        }
+    } catch (err) {
+        log.error(err, {throwing: true})
+        if (err.name == 'ExecResultError') {
+            log.error('Git execution failed with', {code: err.code})
+        } else if (err.name == 'ExecExitError') {
+            const {status, stderr} = err
+            log.error('Git command exited with', {status})
+            if (stderr) {
+                log.warn('<stderr>\n' + stderr)
+                log.warn('</stderr>')
+                delete err.stderr
+            }
+        } else if (err.name == 'UnsavedChangesError') {
+            log.error('Unsaved changes in git for', {file: rel}, {fileStatus})
+            log.error('Commit, stash, or abandon the changes before continuing')
+        }
+        log.info('Use option', {gitCheck: false}, 'to ignore this check.')
+        throw err
+    }
+    this.verbose(1, 'gitCheck', {fileStatus})
+}
+
+/**
+ * Write to a file.
+ *
+ * @private
+ *
+ * @throws {ExecExitError}
+ * @throws {ExecResultError}
+ * @throws {TypeError}
+ * @throws {UnsavedChangesError}
+ *
+ * @param {string} The file path
+ * @param {buffer} The content to write
+ * @return {undefined}
+ */
+function writeFile(file, content) {
+    checkArg(
+        file    , 'file'    , 'string',
+        content , 'content' , 'buffer',
+    )
+    const rel = this.relPath(file)
+    checkGitDirty.call(this, file)
+    if (this.opts.dryRun) {
+        this.logger.warn('Dry run only, not writing', {file: rel})
+    } else {
+        fs.writeFileSync(file, content)
+    }
 }
 
 module.exports = Merger
