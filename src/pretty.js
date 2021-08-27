@@ -34,10 +34,10 @@ const chalk = new Chalk()
 
 const Defaults = {
     // For toString() on a buffer.
-    encoding : 'utf-8',
+    encoding : process.env.PRETTY_ENCODING || 'utf-8',
     headers  : true,
     // 'before', 'after'/true
-    warnings : false,
+    warnings : process.env.PRETTY_WARNINGS,
     indent   : +process.env.PRETTY_INDENT || 0,
     beginTag : process.env.PRETTY_BEGINTAG,
     endTag   : process.env.PRETTY_ENDTAG,
@@ -582,7 +582,7 @@ const PoFlagHash = valueHash([
         'tcl-format',
         'ycp-format',
     ].map(flag => [flag, 'no-' + flag]).flat(),
-].flat())
+].flat(), null)
 
 const PoAttrs = [
     'msgctxt',
@@ -590,5 +590,35 @@ const PoAttrs = [
     'msgid',
     'msgstr',
 ]
+
+function main(argv) {
+    const usage = `Usage: node pretty.js <file>`
+    const fs = require('fs')
+    const pretty = {logger: log} = new Pretty
+    if (!argv.length) {
+        log.print(usage)
+        return 0
+    }
+    log.info(argv)
+    return 0
+    try {
+        run()
+        return 0
+    } catch (err) {
+        log.error(err)
+    }
+    return 1
+    function run() {
+        const [file] = argv
+        log.info('Reading', {file})
+        const buf = fs.readFileSync(file)
+        const result = pretty.po(buf)
+        log.print(result)
+    }
+}
+
+if (require.main === module) {
+    process.exit(main(process.argv.slice(2)))
+}
 
 module.exports = Pretty
