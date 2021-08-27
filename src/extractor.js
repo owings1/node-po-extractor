@@ -102,6 +102,8 @@ const Defaults = {
     },
 }
 
+const SyIdx = Symbol('idx')
+
 class Extractor extends Base {
 
     /**
@@ -116,7 +118,7 @@ class Extractor extends Base {
         this.opts.comments = getCommentOpts(this.opts)
         // Fail fast.
         getBabelOpts(this.opts)
-        this.idx = new Index
+        Object.defineProperty(this, SyIdx, {value: new Index})
     }
 
    /**
@@ -180,11 +182,11 @@ class Extractor extends Base {
      */
     getMessages() {
         const {context} = this.opts
-        return this.idx.keys(context).map(key => ({
+        return this[SyIdx].keys(context).map(key => ({
             key,
             context,
-            refs     : this.idx.refs(context, key),
-            comments : this.idx.comments(context, key),
+            refs     : this[SyIdx].refs(context, key),
+            comments : this[SyIdx].comments(context, key),
         }))
     }
 
@@ -194,7 +196,7 @@ class Extractor extends Base {
      * @return {self}
      */
     clear() {
-        this.idx.clear()
+        this[SyIdx].clear()
         return this
     }
 }
@@ -228,7 +230,7 @@ function addFileContent(file, content) {
         const ref = [rel, msg.loc.start.line].join(':')
         const cmt = msg.comment || null
         this.verbose(3, {key, ref, cmt})
-        this.idx.add(context, key, ref, cmt)
+        this[SyIdx].add(context, key, ref, cmt)
     })
     this.verbose(msgs.length ? 1 : 2, msgs.length, 'keys', {file: rel})
     return msgs
