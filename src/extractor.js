@@ -257,6 +257,7 @@ function formatComment(str, opts) {
         return line
     }).join('\n').trim() || null
 }
+
 /**
  * Adapted from:
  *
@@ -280,7 +281,7 @@ function extractFromCode(content, opts, log) {
         ? key => Boolean(key) && opts.filter.call(this, key)
         : Boolean
     const keys = []
-    const ignoredLineHash = {}
+    const ignoredLineHash = Object.create(null)
     const cidx = new CommentIndex
     const makeComment = keyLine => {
         const cmts = cidx.forKeyAt(keyLine)
@@ -304,9 +305,9 @@ function extractFromCode(content, opts, log) {
                 key: keyMatch[1].trim(),
                 loc: loc,
             }
+            // Extract comments, excluding this one.
             cidx.remove(comment)
             msg.comment = makeComment(lineStart)
-            
             keys.push(msg)
         }
         // Check for ignored lines
@@ -354,6 +355,7 @@ function extractFromCode(content, opts, log) {
             }
             getKeys(arg, log).filter(keyFilter).forEach(key => {
                 const msg = {key, loc}
+                // Extract comments.
                 msg.comment = makeComment(loc.start.line)
                 keys.push(msg)
             })
