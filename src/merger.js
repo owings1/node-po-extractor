@@ -154,7 +154,6 @@ class Merger extends Base {
      */
     mergePos(globs, messages) {
         checkArg(
-            globs    , 'globs'    , Base.checkGlobArg,
             messages , 'messages' , 'array',
         )
         const files = this.glob(globs)
@@ -218,13 +217,12 @@ class Merger extends Base {
      */
     mergePosTo(sourceGlob, destDir, messages) {
         checkArg(
-            sourceGlob , 'sourceGlob' , Base.checkGlobArg,
-            destDir    , 'destDir'    , 'string',
-            messages   , 'messages'   , 'array',
+            destDir , 'destDir' , 'string',
+            messages, 'messages', 'array',
         )
+        const sourceFiles = this.glob(sourceGlob)
         const {baseDir} = this.opts
         destDir = this.resolve(destDir)
-        const sourceFiles = this.glob(sourceGlob)
         const destFiles = sourceFiles.map(file => {
             const relBase = this.relPath(file)
             const parts = relBase.split(path.sep)

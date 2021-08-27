@@ -74,7 +74,22 @@ class Base extends EventEmitter {
         return fs.readFileSync(this.resolve(file))
     }
 
+    /**
+     * Search for files matching the globs.
+     &
+     * @throws {ArgumentError}
+     * @throws {TyoeError}
+     *
+     * @param {string|array} The globs
+     * @return {array} The matching files
+     */
     glob(globs) {
+        checkArg(
+            globs, 'globs', 'string|array',
+            globs, 'globs', value => (
+                Boolean(value.length) || 'Argument (globs) cannot be empty'
+            )
+        )
         globs = castToArray(globs).map(glob => this.resolve(glob))
         return globby.sync(globs)
     }
@@ -137,11 +152,6 @@ class Base extends EventEmitter {
     set logLevel(level) {
         this.logger.logLevel = level
         this.opts.logging.logLevel = this.logger.logLevel
-    }
-
-    static checkGlobArg(value) {
-        checkArg(value, 'globs', 'string|array')
-        return Boolean(value.length) || 'Argument (globs) cannot be empty'
     }
 }
 

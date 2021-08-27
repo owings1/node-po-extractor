@@ -145,7 +145,6 @@ class Extractor extends Base {
      * @return {self}
      */
     addFiles(globs, encoding = null) {
-        checkArg(globs, 'globs', Base.checkGlobArg)
         const files = this.glob(globs)
         this.logger.info('Extracting from', files.length, 'files')
         let count = 0
@@ -450,6 +449,9 @@ function getCommentOpts(opts) {
  *   https://github.com/oliviertassinari/i18n-extract/blob/9110ba51/src/extractFromCode.js
  *
  * Get the babel options.
+ *
+ * @throws {ArgumentError}
+ * @throws {TypeErrpr}
  *
  * @param {object}
  * @return {object}
