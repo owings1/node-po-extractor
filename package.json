@@ -1,6 +1,6 @@
 {
   "name": "@quale/dev-i18n",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "extraction and merging gettext-po i18n files",
   "main": "index.js",
   "scripts": {
