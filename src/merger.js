@@ -27,17 +27,8 @@
 const {
     buffers : {buffersEqual},
     merging : {merge},
-    objects : {
-        lget,
-        lset,
-        rekey,
-        revalue,
-    },
-    types   : {
-        castToArray,
-        isFunction,
-        isObject,
-    }
+    objects : {lget, lset, rekey, revalue},
+    types   : {castToArray, isFunction, isObject},
 } = require('utils-h')
 const fse   = require('fs-extra')
 const globby = require('globby')
@@ -221,7 +212,6 @@ class Merger extends Base {
             messages, 'messages', 'array',
         )
         const sourceFiles = this.glob(sourceGlob)
-        const {baseDir} = this.opts
         destDir = this.resolve(destDir)
         const destFiles = sourceFiles.map(file => {
             const relBase = this.relPath(file)
@@ -261,7 +251,7 @@ class Merger extends Base {
             sourceFile , 'sourceFile' , 'string',
             messages   , 'messages'   , 'array',
         )
-        const {baseDir, charset, replace} = this.opts
+        const {charset, replace} = this.opts
         const rel = this.relPath(sourceFile)
         const method = replace ? 'replace' : 'patch'
         this.logger.info('Reading', {file: rel})

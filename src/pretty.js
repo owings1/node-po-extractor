@@ -600,7 +600,6 @@ function main(argv) {
         return 0
     }
     log.info(argv)
-    return 0
     try {
         run()
         return 0

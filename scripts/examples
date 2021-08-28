@@ -1,10 +1,5 @@
 #!/usr/bin/env node
-const {
-    merging: {merge},
-    objects: {revalue},
-    strings: {stringWidth},
-    types  : {isFunction},
-} = require('utils-h')
+const {merging: {merge}} = require('utils-h')
 const globby = require('globby')
 
 const fs = require('fs')
@@ -200,13 +195,11 @@ const ExamplesScript = module.exports = class extends Base {
 
     runExample(name, sopts = {}) {
         const {logger} = this
-        const beginTag = this.cmd === 'build' ? PoBeginTag : null
-        const endTag   = this.cmd === 'build' ? PoEndTag : null
         sopts = merge(
             {
                 // 10K max
                 maxBuffer: 1024 * 10,
-                env: {...process.env},
+                env: process.env,
             },
             sopts,
         )
