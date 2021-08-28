@@ -1,5 +1,5 @@
 /**
- * node-po-extractor
+ * @quale/dev-i18n
  *
  * Copyright (C) 2021 Doug Owings
  *
@@ -23,11 +23,8 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 // Dependency requires
-const {
-    Logger,
-    merging : {merge},
-    types   : {castToArray, typeOf},
-} = require('utils-h')
+const {types: {castToArray, typeOf}} = require('@quale/core')
+const {Logger, merging : {merge}} = require('@quale/term')
 const globby = require('globby')
 
 // Node requires

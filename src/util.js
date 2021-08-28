@@ -1,5 +1,5 @@
 /**
- * node-po-extractor
+ * @quale/dev-i18n
  *
  * Copyright (C) 2021 Doug Owings
  * 
@@ -25,7 +25,7 @@
 const {
     objects : {update, valueHash},
     types   : {isFunction, typeOf},
-} = require('utils-h')
+} = require('@quale/core')
 
 const child_process = require('child_process')
 const path = require('path')

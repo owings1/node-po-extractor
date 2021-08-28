@@ -1,5 +1,5 @@
 /**
- * node-po-extractor
+ * @quale/dev-i18n
  *
  * Copyright (C) 2021 Doug Owings
  * 
@@ -23,11 +23,11 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 const {expect} = require('chai')
-const {ger} = require('../helpers/util')
+const {ger} = require('../helpers/util.js')
 
 describe('Util', () => {
 
-    const Util = require('../../src/util')
+    const Util = require('../../src/util.js')
 
     describe('#checkArg', () => {
 

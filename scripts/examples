@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const {merging: {merge}} = require('utils-h')
+const {merging: {merge}} = require('@quale/term')
 const globby = require('globby')
 
 const fs = require('fs')

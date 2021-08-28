@@ -15,17 +15,13 @@ function getError(cb) {
     throw new GetErrorError('No error thrown')
 }
 
-const Git = require('./git')
-const {MockOutput} = require('./io')
-const Util = require('../../src/util')
-const {merge} = require('utils-h')
+const Git = require('./git.js')
+const {MockOutput} = require('./io.js')
 
 module.exports = {
     ger: getError,
     getError,
     Git,
     git : Git,
-    merge,
     MockOutput,
-    update: Util.update
 }

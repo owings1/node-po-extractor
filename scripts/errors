@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 const {
-    colors  : {Chalk},
     objects : {lget, lset},
     strings : {ucfirst},
-} = require('utils-h')
+} = require('@quale/core')
+const {colors: {Chalk}} = require('@quale/term')
 
 const Vm = require('vm')
 const fs = require('fs')

@@ -1,5 +1,5 @@
 /**
- * node-po-extractor
+ * @quale/dev-i18n
  *
  * Copyright (C) 2021 Doug Owings
  * 
@@ -25,10 +25,12 @@
 const {
     Logger,
     colors  : {Chalk},
+    merging : {merge},
+} = require('@quale/term')
+const {
     objects : {revalue, valueHash},
-    merging : {mergePlain},
     strings : {cat, endsWith, stripAnsi},
-} = require('utils-h')
+} = require('@quale/core')
 
 const chalk = new Chalk()
 
@@ -110,7 +112,7 @@ function forceEnv(opts, env) {
 class Pretty {
 
     constructor(opts) {
-        this.opts = mergePlain(Defaults, opts)
+        this.opts = merge(Defaults, opts)
         forceEnv(this.opts, process.env)
         this.logger = new Logger(this.opts.logging)
     }

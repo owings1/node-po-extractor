@@ -1,8 +1,7 @@
 const chproc = require('child_process')
 const fs = require('fs')
 const fse = require('fs-extra')
-const path = require('path')
-const {resolve} = path
+const path = {resolve} = require('path')
 
 class GitError extends Error {
 
@@ -87,7 +86,7 @@ module.exports = function create(cwd, opts) {
         return self.write('.gitignore', '/output')
             .write('output/.empty')
             .init()
-            .config('user.name', 'node-po-extractor.test')
+            .config('user.name', '@quale/dev-i18n.test')
             .config('user.email', 'nobody@nowhere.example')
             .add('.')
             .commit('-m', 'initial')

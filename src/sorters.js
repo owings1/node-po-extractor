@@ -1,5 +1,5 @@
 /**
- * node-po-extractor
+ * @quale/dev-i18n
  *
  * Copyright (C) 2021 Doug Owings
  * 
@@ -22,16 +22,14 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const {
-    types: {castToArray, isFunction},
-} = require('utils-h')
+const {types: {castToArray, isFunction}} = require('@quale/core')
 
 /**
  * Extends every sorter with `asc` and `desc` properties. The `asc` property
  * is a reference to the original sorter. The `desc` property calls `asc` with
  * inverted arguments.
  */
-function _extendSorters(sorters) {
+function _extendsortersers(sorters) {
     sorters.filter(isFunction).forEach(sorter => {
         sorter.asc = sorter
         sorter.desc = function (a, b) {
@@ -46,14 +44,14 @@ function _extendSorters(sorters) {
 /**
  * Basic sorters
  */
-const Sort = {}
+const sorters = {}
 
 /**
  * @param {string}
  * @param {string}
  * @return {integer}
  */
-Sort.lc = function sortLc(a, b) {
+sorters.lc = function sortLc(a, b) {
     return a.toLowerCase().localeCompare(b.toLowerCase())
 }
 
@@ -62,7 +60,7 @@ Sort.lc = function sortLc(a, b) {
  * @param {number}
  * @return {integer}
  */
-Sort.num = function sortNum(a, b) {
+sorters.num = function sortNum(a, b) {
     return a - b || 0
 }
 
@@ -71,12 +69,12 @@ Sort.num = function sortNum(a, b) {
  * @param {string}
  * @return {integer}
  */
-Sort.ref = function sortRef(a, b) {
+sorters.ref = function sortRef(a, b) {
     const [afile, aline] = a.split(':')
     const [bfile, bline] = b.split(':')
     return (
-        Sort.lc(afile, bfile) ||
-        Sort.num(parseInt(aline), parseInt(bline))
+        sorters.lc(afile, bfile) ||
+        sorters.num(parseInt(aline), parseInt(bline))
     )
 }
 
@@ -89,8 +87,8 @@ Sort.ref = function sortRef(a, b) {
  * @param {object}
  * @return {integer}
  */
-Sort.keyLc = function sortByKey(a, b) {
-    return Sort.lc(a.key, b.key)
+sorters.keyLc = function sortByKey(a, b) {
+    return sorters.lc(a.key, b.key)
 }
 
 /**
@@ -98,12 +96,12 @@ Sort.keyLc = function sortByKey(a, b) {
  * @param {object}
  * @return {integer}
  */
-Sort.loc = function sortLocs(a, b) {
+sorters.loc = function sortLocs(a, b) {
     return (
-        Sort.lc(String(a.file), String(b.file)) ||
-        Sort.lc(String(a.filename), String(b.filename)) ||
-        Sort.num(a.start.line, b.start.line) ||
-        Sort.num(a.start.column, b.start.column)
+        sorters.lc(String(a.file), String(b.file)) ||
+        sorters.lc(String(a.filename), String(b.filename)) ||
+        sorters.num(a.start.line, b.start.line) ||
+        sorters.num(a.start.column, b.start.column)
     )
 }
 
@@ -112,7 +110,7 @@ Sort.loc = function sortLocs(a, b) {
  * @param {array|string}
  * @return {integer}
  */
-Sort.refs = function sortRefs(a, b) {
+sorters.refs = function sortRefs(a, b) {
     a = castToArray(a)
     b = castToArray(b)
     if (!a.length || !b.length) {
@@ -129,7 +127,7 @@ Sort.refs = function sortRefs(a, b) {
         if (i > b.length) {
             return 1
         }
-        const cmp = Sort.ref(a[i], b[i])
+        const cmp = sorters.ref(a[i], b[i])
         if (cmp) {
             return cmp
         }
@@ -140,20 +138,20 @@ Sort.refs = function sortRefs(a, b) {
     return 0
 }
 
-_extendSorters(Object.values(Sort))
+_extendsortersers(Object.values(sorters))
 
 /**
  * Tranlation sorters
  */
-Sort.tran = {}
+sorters.tran = {}
 
 /**
  * @param {object}
  * @param {object}
  * @return {integer}
  */
-Sort.tran.msgid = function sortByMsgid(a, b) {
-    return Sort.lc(a.msgid, b.msgid)
+sorters.tran.msgid = function sortByMsgid(a, b) {
+    return sorters.lc(a.msgid, b.msgid)
 }
 
 /**
@@ -161,13 +159,13 @@ Sort.tran.msgid = function sortByMsgid(a, b) {
  * @param {object}
  * @return {integer}
  */
-Sort.tran.file = function sortByFile(a, b) {
+sorters.tran.file = function sortByFile(a, b) {
     const aref = (a.comments || {}).reference
     const bref = (b.comments || {}).reference
     if (aref && bref) {
         const arefs = aref.split('\n').map(it => it.split(' ')).flat()
         const brefs = bref.split('\n').map(it => it.split(' ')).flat()
-        return Sort.refs(arefs, brefs)
+        return sorters.refs(arefs, brefs)
     }
     if (aref) {
         return -1
@@ -175,7 +173,7 @@ Sort.tran.file = function sortByFile(a, b) {
     if (bref) {
         return 1
     }
-    return Sort.lc(a.msgid, b.msgid)
+    return sorters.lc(a.msgid, b.msgid)
 }
 
 /**
@@ -183,7 +181,7 @@ Sort.tran.file = function sortByFile(a, b) {
  * @param {object}
  * @return {integer}
  */
-Sort.tran.source = function sortInSourceOrder(a, b) {
+sorters.tran.source = function sortInSourceOrder(a, b) {
     const asrc = this.sourceOrderHash[a.msgid]
     const bsrc = this.sourceOrderHash[b.msgid]
     if (asrc == null || bsrc == null) {
@@ -193,11 +191,11 @@ Sort.tran.source = function sortInSourceOrder(a, b) {
         if (bsrc != null) {
             return 1
         }
-        return Sort.lc(a.msgid, b.msgid)
+        return sorters.lc(a.msgid, b.msgid)
     }
     return asrc - bsrc
 }
 
-_extendSorters(Object.values(Sort.tran))
+_extendsortersers(Object.values(sorters.tran))
 
-module.exports = Sort
+module.exports = sorters

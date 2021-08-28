@@ -1,10 +1,16 @@
 {
-  "name": "po-extractor",
-  "version": "0.0.1",
-  "description": "extraction util for gettext-po i18n files",
+  "name": "@quale/dev-i18n",
+  "version": "0.1.0",
+  "description": "extraction and merging gettext-po i18n files",
   "main": "index.js",
   "scripts": {
-    "test": "NODE_OPTIONS='--trace-warnings' nyc --reporter=text-summary mocha test/specs/**/*.test.js && nyc report --reporter=lcov",
+    "test": "nyc --reporter=text-summary mocha test/specs/** && nyc report --reporter=lcov",
+    "preversion": "npm run clean && npm i && npm t",
+    "version": "echo no version script to run",
+    "postversion": "git push && git push --tags",
+    "clean": "npm run cl && rm -rf node_modules",
+    "cl": "rm -rf .nyc_output coverage",
+    "co": "open coverage/lcov-report/index.html",
     "examples": "scripts/examples run",
     "examples:build": "scripts/examples build",
     "errors": "scripts/errors info",
@@ -12,12 +18,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/owings1/node-po-extractor.git"
+    "url": "git+https://github.com/owings1/quale-dev-i18n.git"
   },
   "files": [
     "src",
     "index.js",
-    "LICENSE.txt",
+    "LICENSE",
     "NOTICE.md",
     "README.md"
   ],
@@ -35,9 +41,9 @@
   "author": "Doug Owings <doug@dougowings.net>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/owings1/node-po-extractor/issues"
+    "url": "https://github.com/owings1/quale-dev-i18n/issues"
   },
-  "homepage": "https://github.com/owings1/node-po-extractor#readme",
+  "homepage": "https://github.com/owings1/quale-dev-i18n#readme",
   "devDependencies": {
     "chai": "^4.3.4",
     "diff": "^5.0.0",
@@ -48,9 +54,15 @@
   "dependencies": {
     "@babel/core": "^7.14.8",
     "@babel/traverse": "^7.14.8",
+    "@quale/core": "^0.1.1",
+    "@quale/term": "^0.1.1",
     "fs-extra": "^10.0.0",
     "gettext-parser": "^4.0.4",
-    "utils-h": "https://github.com/owings1/node-utils-h.git",
     "globby": "^10.0.2"
+  },
+  "mocha": {
+    "extension": [
+      "test.js"
+    ]
   }
 }

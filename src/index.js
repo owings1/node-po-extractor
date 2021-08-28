@@ -1,5 +1,5 @@
 /**
- * node-po-extractor
+ * @quale/dev-i18n
  *
  * Copyright (C) 2021 Doug Owings
  * 
@@ -22,9 +22,9 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const {lget, lset} = require('utils-h').objects
-const Sort = require('./sorters')
-const {MessageConflictError} = require('./errors')
+const {objects: {lget, lset}} = require('@quale/core')
+const Sort = require('./sorters.js')
+const {MessageConflictError} = require('./errors.js')
 
 /**
  * Index extracted messages.

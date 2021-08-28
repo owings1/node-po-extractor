@@ -1,5 +1,5 @@
 /**
- * node-po-extractor
+ * @quale/dev-i18n
  *
  * Copyright (C) 2021 Doug Owings
  *
@@ -26,10 +26,10 @@
 // Dependency requires
 const {
     buffers : {buffersEqual},
-    merging : {merge},
     objects : {lget, lset, rekey, revalue},
     types   : {castToArray, isFunction, isObject},
-} = require('utils-h')
+} = require('@quale/core')
+const {merging : {merge}} = require('@quale/term')
 const fse   = require('fs-extra')
 const globby = require('globby')
 const parser = require('gettext-parser').po

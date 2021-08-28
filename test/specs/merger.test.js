@@ -1,5 +1,5 @@
 /**
- * node-po-extractor
+ * @quale/dev-i18n
  *
  * Copyright (C) 2021 Doug Owings
  * 
@@ -23,12 +23,13 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 const {expect} = require('chai')
+const {merging: {merge}} = require('@quale/term')
 const fs = require('fs')
 const fse = require('fs-extra')
 const path = require('path')
 const {resolve} = path
 const tmp = require('tmp')
-const {ger, merge} = require('../helpers/util.js')
+const {ger} = require('../helpers/util.js')
 const Git = require('../helpers/git.js')
 
 describe('Merger', () => {

@@ -1,5 +1,5 @@
 const stream = require('stream')
-const {stripAnsi} = require('utils-h').strings
+const {strings: {stripAnsi}} = require('@quale/core')
 
 class MockOutput extends stream.Writable {
 

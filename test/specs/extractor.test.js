@@ -1,5 +1,5 @@
 /**
- * node-po-extractor
+ * @quale/dev-i18n
  *
  * Copyright (C) 2021 Doug Owings
  * 
@@ -23,13 +23,13 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 const {expect} = require('chai')
-const path = require('path')
-const {resolve} = path
-const {ger, merge, MockOutput} = require('../helpers/util')
+const {merging: {merge}} = require('@quale/term')
+const path = {resolve} = require('path')
+const {ger, MockOutput} = require('../helpers/util.js')
 
 describe('Extractor', () => {
 
-    const Extractor = require('../../src/extractor')
+    const Extractor = require('../../src/extractor.js')
 
     beforeEach(function () {
         this.opts = {

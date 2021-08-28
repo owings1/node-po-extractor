@@ -1,4 +1,4 @@
-## node-po-extractor API
+## @quale/dev-i18n API
 
 ### `extractor.extract(globs, encoding = null)`
 

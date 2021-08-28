@@ -1,18 +1,12 @@
-# node-po-extractor
+# @quale/dev-i18n
 
 Utility for extracting i18n messages and merging them with gettext-po files.
 
 ## Project status
 
-> NB: This project is in the very early stages of development. Please feel free
+> NB: This project is in early stages of development. Please feel free
 > to experiment with it, but do not use it for production purposes.
-
-I wrote this as I am setting up i18n in a couple projects. There are a lot of
-utilities out there that do similar things, but I could not seem to get any of
-them to work the way I needed. So  I am putting this here in case anyone else
-finds some of it useful.
-
-If you have any comments or suggestions, please drop me a line, or file an issue.
+> If you have any comments or suggestions, please drop me a line, or file an issue.
 
 ## Features
 
@@ -31,13 +25,13 @@ If you have any comments or suggestions, please drop me a line, or file an issue
 Install:
 
 ```bash
-npm install --save-dev owings1/node-po-extractor
+npm install --save-dev @quale/dev-i18n
 ```
 
 Import:
 
 ```javascript
-const {Extractor, Merger} = require('po-extractor')
+const {Extractor, Merger} = require('@quale/dev-i18n')
 ```
 
 Extract and merge:
@@ -198,21 +192,11 @@ Documentation forthcoming.
 
 -------------
 
-## Dependencies
-
-- [@babel/core](https://www.npmjs.com/package/@babel/core)
-- [@babel/traverse](https://www.npmjs.com/package/@babel/traverse)
-- [chalk](https://www.npmjs.com/package/chalk)
-- [deepmerge](https://www.npmjs.com/package/deepmerge)
-- [gettext-parser](https://www.npmjs.com/package/gettext-parser)
-- [fs-extra](https://www.npmjs.com/package/fs-extra)
-- [globby](https://www.npmjs.com/package/globby)
-
 ## License
 
 ***MIT License***
 
-See file [LICENSE.txt](LICENSE.txt).
+See file [LICENSE](LICENSE).
 
 ## Notice
 

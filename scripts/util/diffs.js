@@ -1,5 +1,5 @@
 /**
- * node-po-extractor Diffs helper
+ * @quale/dev-i18n Diffs helper
  *
  * Copyright (C) 2020-2021 Doug Owings
  *
@@ -54,25 +54,13 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const chalk = require('chalk')
+const {arrays: {append}} = require('@quale/core')
+const {colors: {Chalk}} = require('@quale/term')
 const diff = require('diff')
 
-const noBlanks = line => typeof line != 'undefined' && line !== null
+const noBlanks = line => typeof line !== 'undefined' && line !== null
 
-/**
- * Append all values to an array.
- *
- * @throws {TypeError}
- * @param {array} The array to push to
- * @param {array} The values to push
- * @return {array} The input array
- */
-function append(arr, values) {
-    values.forEach(value => arr.push(value))
-    return arr
-}
-
-class Diffs {
+const Diffs = module.exports = class {
 
     /**
      * Adapted from:

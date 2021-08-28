@@ -1,5 +1,5 @@
 /**
- * node-po-extractor
+ * @quale/dev-i18n
  *
  * Copyright (C) 2021 Doug Owings
  * 
@@ -59,7 +59,7 @@
 const {
     objects : {lget, lset, valueHash},
     types   : {castToArray, isFunction, isObject, isString},
-} = require('utils-h')
+} = require('@quale/core')
 const globby          = require('globby')
 const {transformSync} = require('@babel/core')
 const traverse        = require('@babel/traverse').default
@@ -73,11 +73,7 @@ const Base  = require('./base.js')
 const Index = require('./index.js')
 const Sort  = require('./sorters.js')
 const {ArgumentError} = require('./errors.js')
-const {
-    arrayUnique,
-    checkArg,
-    resolveSafe,
-} = require('./util.js')
+const {arrayUnique, checkArg} = require('./util.js')
 
 // Default options.
 const Defaults = {

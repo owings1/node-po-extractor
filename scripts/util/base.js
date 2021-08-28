@@ -1,9 +1,9 @@
 const {
-    Logger,
     objects: {revalue, update},
     strings: {stringWidth},
     types  : {isFunction},
-} = require('utils-h')
+} = require('@quale/core')
+const {Logger} = require('@quale/term')
 
 const path = {basename} = require('path')
 const {ScriptError} = require('../../src/errors.js')
