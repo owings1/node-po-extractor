@@ -22,14 +22,21 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const {expect} = require('chai')
-const {merging: {merge}} = require('@quale/term')
-const path = {resolve} = require('path')
-const {ger, MockOutput} = require('../helpers/util.js')
+import {expect} from 'chai'
+import {merge} from '@quale/term/merging.js'
+import {ger, MockOutput} from '../helpers/util.js'
+import path from 'path'
+const {resolve} = path
+
+import Extractor from '../../src/extractor.js'
+
+import {fileURLToPath} from 'url'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+
 
 describe('Extractor', () => {
-
-    const Extractor = require('../../src/extractor.js')
 
     beforeEach(function () {
         this.opts = {

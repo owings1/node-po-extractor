@@ -1,26 +1,31 @@
 #!/usr/bin/env node
-const {
-    objects : {lget, lset},
-    strings : {ucfirst},
-} = require('@quale/core')
-const {colors: {Chalk}} = require('@quale/term')
+import {lget, lset} from '@quale/core/objects.js'
+import {ucfirst} from '@quale/core/strings.js'
+import {sum as sumArray} from '@quale/core/arrays.js'
 
-const Vm = require('vm')
-const fs = require('fs')
-const fse = require('fs-extra')
-const path = {dirname, relative, resolve} = require('path')
-const {expect} = require('chai')
+import path from 'path'
+import Vm from 'vm'
+import fs from 'fs'
+import fse from 'fs-extra'
+import {expect} from 'chai'
 
-const Base = require('./util/base.js')
-const Diffs = require('./util/diffs.js')
-const Errors = require('../src/errors.js')
+import Base from './util/base.js'
+import Diffs from './util/diffs.js'
+import * as Errors from '../src/errors.js'
+
+import { fileURLToPath } from 'url'
+import process from 'process'
+
+const {dirname, relative, resolve} = path
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
 
 const BaseDir = resolve(__dirname, '..')
-const OutFile = resolve(BaseDir, 'src/static/errors.map.js')
+const OutFile = resolve(BaseDir, 'src/static/errors.map.json')
 
-const chalk = new Chalk
-
-const ErrorsScript = module.exports = class extends Base {
+class ErrorsScript extends Base {
 
     static flags() {
         return {
@@ -44,7 +49,7 @@ const ErrorsScript = module.exports = class extends Base {
             return
         }
         logger.info('Loading', {file: rel})
-        const actual = require(OutFile)
+        const actual = JSON.parse(fs.readFileSync(OutFile))
         const expected = this.getDataToWrite(result)
         logger.info('Comparing')
         const diff = this.getDataDiff(actual, expected)
@@ -245,7 +250,7 @@ function evk(m, cb) {
     })
 }
 
-// trasitive loop
+// transitive loop
 function abck(m, cb) {
     Object.keys(m).forEach(a => {
         Object.keys(m[a] || {}).forEach(b => {
@@ -256,6 +261,6 @@ function abck(m, cb) {
     })
 }
 
-if (require.main === module) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
     new ErrorsScript(true, process.argv).run()
 }

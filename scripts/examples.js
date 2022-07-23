@@ -1,14 +1,19 @@
 #!/usr/bin/env node
-const {merging: {merge}} = require('@quale/term')
-const globby = require('globby')
+import {merge} from '@quale/term/merging.js'
+import globby from 'globby'
+import fs from 'fs'
+import {basename, dirname, relative, resolve} from 'path'
+import chproc from 'child_process'
 
-const fs = require('fs')
-const path = {basename, dirname, relative, resolve} = require('path')
-const chproc = require('child_process')
+import {gitFileStatus} from '../src/util.js'
+import Base from './util/base.js'
+import {ScriptError} from '../src/errors.js'
 
-const {gitFileStatus} = require('../src/util.js')
-const Base = require('./util/base.js')
-const {ScriptError} = require('../src/errors.js')
+import { fileURLToPath } from 'url'
+import process from 'process'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 const EgScript = 'example.js'
 const Readme = 'README.md'
@@ -20,7 +25,7 @@ const TemplateFile = resolve(__dirname, 'res/example-template.md')
 const PoBeginTag = '<po-content>'
 const PoEndTag = '</po-content>'
 
-const ExamplesScript = module.exports = class extends Base {
+export default class ExamplesScript extends Base {
 
     static flags() {
         return {
@@ -219,6 +224,7 @@ const ExamplesScript = module.exports = class extends Base {
     }
 }
 
-if (require.main === module) {
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
     new ExamplesScript(true, process.argv).run()
 }

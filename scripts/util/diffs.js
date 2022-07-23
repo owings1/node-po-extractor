@@ -54,13 +54,16 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const {arrays: {append}} = require('@quale/core')
-const {colors: {Chalk}} = require('@quale/term')
-const diff = require('diff')
+import * as diff from 'diff'
+import {chalk} from '@quale/term/colors.js'
+// const {arrays: {append}} = require('@quale/core')
+// const {colors: {Chalk}} = require('@quale/term')
+// const diff = require('diff')
 
 const noBlanks = line => typeof line !== 'undefined' && line !== null
 
-const Diffs = module.exports = class {
+// const Diffs = module.exports = class {
+export default class Diffs {
 
     /**
      * Adapted from:
@@ -172,4 +175,4 @@ const Diffs = module.exports = class {
     }
 }
 
-module.exports = Diffs
+// module.exports = Diffs

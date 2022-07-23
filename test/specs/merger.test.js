@@ -22,19 +22,23 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const {expect} = require('chai')
-const {merging: {merge}} = require('@quale/term')
-const fs = require('fs')
-const fse = require('fs-extra')
-const path = require('path')
+import {expect} from 'chai'
+import {merge} from '@quale/term/merging.js'
+import {ger, Git} from '../helpers/util.js'
+
+import fs from 'fs'
+import fse from 'fs-extra'
+import path from 'path'
+import tmp from 'tmp'
+
+import Merger from '../../src/merger.js'
+
 const {resolve} = path
-const tmp = require('tmp')
-const {ger} = require('../helpers/util.js')
-const Git = require('../helpers/git.js')
+import {fileURLToPath} from 'url'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 describe('Merger', () => {
-
-    const Merger = require('../../src/merger.js')
 
     before(function () {
         this._tmpDir = tmp.dirSync().name

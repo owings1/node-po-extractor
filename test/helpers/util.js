@@ -1,3 +1,7 @@
+
+import git from './git.js'
+import {MockOutput} from './io.js'
+
 class BaseError extends Error {
     constructor(...args) {
         super(...args)
@@ -6,7 +10,7 @@ class BaseError extends Error {
 }
 class GetErrorError extends BaseError {}
 
-function getError(cb) {
+export function ger(cb) {
     try {
         cb()
     } catch (err) {
@@ -14,14 +18,10 @@ function getError(cb) {
     }
     throw new GetErrorError('No error thrown')
 }
-
-const Git = require('./git.js')
-const {MockOutput} = require('./io.js')
-
-module.exports = {
-    ger: getError,
-    getError,
-    Git,
-    git : Git,
+export {
+    ger as getError,
+    git,
+    git as Git,
     MockOutput,
 }
+

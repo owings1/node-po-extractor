@@ -22,7 +22,14 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const Props = require('./static/errors.map.js')
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const PropsFile = path.resolve(__dirname, 'static/errors.map.json')
+const Props = JSON.parse(fs.readFileSync(PropsFile))
 
 function addProps(err) {
     const name = err.name || err.constructor.name
@@ -46,30 +53,17 @@ class BaseError extends Error {
     }
 }
 
-class ArgumentError        extends BaseError {}
-class DuplicateKeyError    extends BaseError {}
-class ExecError            extends BaseError {}
-class GitCheckError        extends BaseError {}
-class MessageConflictError extends BaseError {}
-class MissingContextError  extends BaseError {}
-class ScriptError          extends BaseError {}
+export class ArgumentError        extends BaseError {}
+export class DuplicateKeyError    extends BaseError {}
+export class ExecError            extends BaseError {}
+export class GitCheckError        extends BaseError {}
+export class MessageConflictError extends BaseError {}
+export class MissingContextError  extends BaseError {}
+export class ScriptError          extends BaseError {}
 
-class ExecExitError       extends GitCheckError {}
-class ExecResultError     extends GitCheckError {}
-class UnsavedChangesError extends GitCheckError {}
+export class ExecExitError       extends GitCheckError {}
+export class ExecResultError     extends GitCheckError {}
+export class UnsavedChangesError extends GitCheckError {}
 
 ExecExitError.isExecError = true
 ExecResultError.isExecError = true
-
-module.exports = {
-    ArgumentError,
-    DuplicateKeyError,
-    ExecError,
-    ExecExitError,
-    ExecResultError,
-    GitCheckError,
-    MessageConflictError,
-    MissingContextError,
-    ScriptError,
-    UnsavedChangesError,
-}

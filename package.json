@@ -1,8 +1,14 @@
 {
   "name": "@quale/dev-i18n",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "extraction and merging gettext-po i18n files",
-  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./extractor.js": "./src/extractor.js",
+    "./merger.js": "./src/merger.js",
+    "./pretty.js": "./src/pretty.js"
+  },
   "scripts": {
     "test": "nyc --reporter=text-summary mocha test/specs/** && nyc report --reporter=lcov",
     "preversion": "npm run clean && npm i && npm t",
@@ -11,10 +17,10 @@
     "clean": "npm run cl && rm -rf node_modules",
     "cl": "rm -rf .nyc_output coverage",
     "co": "open coverage/lcov-report/index.html",
-    "examples": "scripts/examples run",
-    "examples:build": "scripts/examples build",
-    "errors": "scripts/errors info",
-    "errors:build": "scripts/errors build"
+    "examples": "scripts/examples.js run",
+    "examples:build": "scripts/examples.js build",
+    "errors": "scripts/errors.js info",
+    "errors:build": "scripts/errors.js build"
   },
   "repository": {
     "type": "git",
@@ -47,15 +53,15 @@
   "devDependencies": {
     "chai": "^4.3.4",
     "diff": "^5.0.0",
-    "mocha": "^9.0.3",
+    "mocha": "^10.0.0",
     "nyc": "^15.1.0",
     "tmp": "^0.2.1"
   },
   "dependencies": {
     "@babel/core": "^7.14.8",
     "@babel/traverse": "^7.14.8",
-    "@quale/core": "^0.1.1",
-    "@quale/term": "^0.1.1",
+    "@quale/core": "^1.0.0",
+    "@quale/term": "^1.0.0",
     "fs-extra": "^10.0.0",
     "gettext-parser": "^4.0.4",
     "globby": "^10.0.2"

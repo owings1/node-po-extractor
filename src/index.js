@@ -22,14 +22,14 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const {objects: {lget, lset}} = require('@quale/core')
-const Sort = require('./sorters.js')
-const {MessageConflictError} = require('./errors.js')
+import {lget, lset} from '@quale/core/objects.js'
+import Sort from './sorters.js'
+import {MessageConflictError} from './errors.js'
 
 /**
  * Index extracted messages.
  */
-class Index  {
+export default class Index  {
 
     /**
      * @constructor
@@ -125,5 +125,3 @@ class Index  {
         return this.idx[ctx][key][ref].cmt
     }
 }
-
-module.exports = Index

@@ -22,24 +22,16 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/** Dependency requires **/
-const {
-    objects : {lget, lset, rekey, revalue},
-    types   : {castToArray, isFunction, isObject},
-} = require('@quale/core')
-const {merging : {merge}} = require('@quale/term')
-const fse   = require('fs-extra')
-const globby = require('globby')
-const parser = require('gettext-parser').po
+import {revalue} from '@quale/core/objects.js'
+import {castToArray} from '@quale/core/types.js'
+import {po as parser} from 'gettext-parser'
 
-/** Noe requires **/
-const fs   = require('fs')
-const path = require('path')
+import Base from './base.js'
+import {checkArg} from './util.js'
+import {MissingContextError} from './errors.js'
 
-/** Package requires **/
-const Base = require('./base.js')
-const {checkArg} = require('./util.js')
-const {MissingContextError} = require('./errors.js')
+import { fileURLToPath } from 'url'
+import process from 'process'
 
 /** Default Options **/
 const Defaults = {
@@ -57,7 +49,7 @@ const Defaults = {
     },
 }
 
-class Auditor extends Base {
+export default class Auditor extends Base {
 
     constructor(opts) {
         super(Defaults, opts)
@@ -142,7 +134,6 @@ function arrayBisect(arr, filter) {
 
 function main(argv) {
     const usage = `Usage: node auditor.js [files,...]`
-    const fs = require('fs')
     const auditor = {logger: log} = new Auditor({
         logging: {
             //inspect: {depth: 4},
@@ -166,6 +157,6 @@ function main(argv) {
     }
 }
 
-if (require.main === module) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
     process.exit(main(process.argv.slice(2)))
 }

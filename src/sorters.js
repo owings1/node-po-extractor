@@ -22,7 +22,7 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const {types: {castToArray, isFunction}} = require('@quale/core')
+import {castToArray, isFunction} from '@quale/core/types.js'
 
 /**
  * Extends every sorter with `asc` and `desc` properties. The `asc` property
@@ -45,6 +45,7 @@ function _extendsortersers(sorters) {
  * Basic sorters
  */
 const sorters = {}
+export default sorters
 
 /**
  * @param {string}
@@ -197,5 +198,3 @@ sorters.tran.source = function sortInSourceOrder(a, b) {
 }
 
 _extendsortersers(Object.values(sorters.tran))
-
-module.exports = sorters

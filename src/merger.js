@@ -23,30 +23,26 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-// Dependency requires
-const {
-    buffers : {buffersEqual},
-    objects : {lget, lset, rekey, revalue},
-    types   : {castToArray, isFunction, isObject},
-} = require('@quale/core')
-const {merging : {merge}} = require('@quale/term')
-const fse   = require('fs-extra')
-const globby = require('globby')
-const parser = require('gettext-parser').po
+import {buffersEqual} from '@quale/core/buffers.js'
+import {rekey, revalue} from '@quale/core/objects.js'
+import {castToArray, isFunction, isObject} from '@quale/core/types.js'
+import {merge} from '@quale/term/merging.js'
+import fse from 'fs-extra'
+import {po as parser} from 'gettext-parser'
+// const parser = require('gettext-parser').po
 
-// Node requires
-const fs   = require('fs')
-const path = require('path')
+import fs from 'fs'
+import path from 'path'
 
-// Package requires
-const Base = require('./base.js')
-const Sort = require('./sorters.js')
-const {checkArg, checkMax, gitFileStatus} = require('./util.js')
-const {
+import Base from './base.js'
+import Sort from './sorters.js'
+import {checkArg, checkMax, gitFileStatus} from './util.js'
+
+import {
     DuplicateKeyError,
     MissingContextError,
     UnsavedChangesError,
-} = require('./errors.js')
+} from './errors.js'
 
 // Default options.
 const Defaults = {
@@ -73,7 +69,7 @@ const Defaults = {
 
 const GitStatusOk = ['clean', 'added', 'staged']
 
-class Merger extends Base {
+export default class Merger extends Base {
 
     /**
      * @constructor
@@ -308,7 +304,8 @@ function mergePoResult(po, messages) {
     checkArg(
         po       , 'po'       , 'object',
         messages , 'messages' , 'array',
-    ).checkArg(
+    )
+    checkArg(
         po.translations , 'po.translations' , 'object',
         po.headers      , 'po.headers'      , 'object',
     )
@@ -658,5 +655,3 @@ function writeFile(file, content) {
         fs.writeFileSync(file, content)
     }
 }
-
-module.exports = Merger

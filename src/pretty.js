@@ -22,17 +22,14 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const {
-    Logger,
-    colors  : {Chalk},
-    merging : {merge},
-} = require('@quale/term')
-const {
-    objects : {revalue, valueHash},
-    strings : {cat, endsWith, stripAnsi},
-} = require('@quale/core')
-
-const chalk = new Chalk()
+import Logger from '@quale/term/logger.js'
+import {chalk} from '@quale/term/colors.js'
+import {merge} from '@quale/term/merging.js'
+import {revalue, valueHash} from '@quale/core/objects.js'
+import {cat, endsWith, stripAnsi} from '@quale/core/strings.js'
+import fs from 'fs'
+import { fileURLToPath } from 'url'
+import process from 'process'
 
 const Defaults = {
     // For toString() on a buffer.
@@ -54,7 +51,7 @@ Defaults.chalks = {
         num    : chalk.cyan,
         colon  : chalk,
         paren  : chalk.grey,
-        msg    : chalk.italic.keyword('orange'),
+        msg    : chalk.italic.hex('#ffa500'),
     },
 }
 
@@ -109,7 +106,7 @@ function forceEnv(opts, env) {
     })))
 }
 
-class Pretty {
+export default class Pretty {
 
     constructor(opts) {
         this.opts = merge(Defaults, opts)
@@ -595,7 +592,6 @@ const PoAttrs = [
 
 function main(argv) {
     const usage = `Usage: node pretty.js <file>`
-    const fs = require('fs')
     const pretty = {logger: log} = new Pretty
     if (!argv.length) {
         log.print(usage)
@@ -618,8 +614,6 @@ function main(argv) {
     }
 }
 
-if (require.main === module) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
     process.exit(main(process.argv.slice(2)))
 }
-
-module.exports = Pretty

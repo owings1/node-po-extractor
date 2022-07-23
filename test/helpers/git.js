@@ -1,7 +1,8 @@
-const chproc = require('child_process')
-const fs = require('fs')
-const fse = require('fs-extra')
-const path = {resolve} = require('path')
+import chproc from 'child_process'
+import fs from 'fs'
+import fse from 'fs-extra'
+import path from 'path'
+const {resolve} = path
 
 class GitError extends Error {
 
@@ -11,7 +12,7 @@ class GitError extends Error {
     }
 }
 
-module.exports = function create(cwd, opts) {
+export default function create(cwd, opts) {
 
     function self(...args) {
         const result = chproc.spawnSync('git', args, self.sopts)

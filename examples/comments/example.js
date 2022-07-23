@@ -1,8 +1,13 @@
 // examples/comments
-const {Extractor, Merger, Pretty} = require('../..')
+import {Extractor, Merger, Pretty} from '../../index.js'
 
-const {relative, resolve} = require('path')
+import {relative, resolve, dirname} from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 const baseDir = __dirname
+
 const thisFile = relative(resolve(baseDir, '../..'), __filename)
 const pretty = new Pretty()
 const hr = pretty.hr(77)

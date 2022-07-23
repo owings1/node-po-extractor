@@ -1,5 +1,5 @@
-module.exports = {
-    get Extractor() { return require('./src/extractor.js') },
-    get Merger()    { return require('./src/merger.js') },
-    get Pretty()    { return require('./src/pretty.js') },
-}
+import Extractor from './src/extractor.js'
+import Merger from './src/merger.js'
+import Pretty from './src/pretty.js'
+
+export {Extractor, Merger, Pretty}

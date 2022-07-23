@@ -1,7 +1,7 @@
-const stream = require('stream')
-const {strings: {stripAnsi}} = require('@quale/core')
+import stream from 'stream'
+import {stripAnsi} from '@quale/core/strings.js'
 
-class MockOutput extends stream.Writable {
+export class MockOutput extends stream.Writable {
 
     constructor(opts = {}) {
         super()
@@ -28,5 +28,3 @@ class MockOutput extends stream.Writable {
 
     get plain() { return stripAnsi(this.raw) }
 }
-
-module.exports = {MockOutput}

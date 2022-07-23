@@ -55,25 +55,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-// Dependency requires
-const {
-    objects : {lget, lset, valueHash},
-    types   : {castToArray, isFunction, isObject, isString},
-} = require('@quale/core')
-const globby          = require('globby')
-const {transformSync} = require('@babel/core')
-const traverse        = require('@babel/traverse').default
 
-// Node requires
-const fs   = require('fs')
-const path = require('path')
+import {lset, valueHash} from '@quale/core/objects.js'
+import {castToArray, isFunction, isObject} from '@quale/core/types.js'
+import {transformSync} from '@babel/core'
+import Traverse from '@babel/traverse'
 
-// Package requires
-const Base  = require('./base.js')
-const Index = require('./index.js')
-const Sort  = require('./sorters.js')
-const {ArgumentError} = require('./errors.js')
-const {arrayUnique, checkArg} = require('./util.js')
+import Base from './base.js'
+import Index from './index.js'
+import {ArgumentError} from './errors.js'
+import {arrayUnique, checkArg} from './util.js'
+
+
+const traverse = Traverse.default
+
 
 // Default options.
 const Defaults = {
@@ -100,7 +95,7 @@ const Defaults = {
 
 const SyIdx = Symbol('idx')
 
-class Extractor extends Base {
+export default class Extractor extends Base {
 
     /**
      * @constructor
@@ -449,7 +444,7 @@ function getCommentOpts(opts) {
  * Get the babel options.
  *
  * @throws {ArgumentError}
- * @throws {TypeErrpr}
+ * @throws {TypeError}
  *
  * @param {object}
  * @return {object}
@@ -573,5 +568,3 @@ const NoInformationTypes = valueHash([
     'Identifier',
     'MemberExpression',
 ])
-
-module.exports = Extractor

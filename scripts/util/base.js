@@ -1,17 +1,34 @@
-const {
-    objects: {revalue, update},
-    strings: {stringWidth},
-    types  : {isFunction},
-} = require('@quale/core')
-const {Logger} = require('@quale/term')
 
-const path = {basename} = require('path')
-const {ScriptError} = require('../../src/errors.js')
+
+import path from 'path'
+import {ScriptError} from '../../src/errors.js'
+import Logger from '@quale/term/logger.js'
+import {revalue, update} from '@quale/core/objects.js'
+import {stringWidth} from '@quale/core/strings.js'
+import {isFunction} from '@quale/core/types.js'
+
+
+
+// const {
+//     objects: {revalue, update},
+//     strings: {stringWidth},
+//     types  : {isFunction},
+// } = require('@quale/core')
+// const {Logger} = require('@quale/term')
+
+// const path = {basename} = require('path')
+// const {ScriptError} = require('../../src/errors.js')
+
+
+
+
+
 
 const SyArgv = Symbol('argv')
 const CmdPfx = 'cmd_'
 
-module.exports = class BaseScript {
+// module.exports = class BaseScript {
+export default class BaseScript {
 
     constructor(isMain, argv) {
         this.name = this.constructor.name
@@ -95,11 +112,11 @@ function exit(code = 0) {
 }
 
 function help() {
-    const script = basename(this[SyArgv][1])
+    const script = path.basename(this[SyArgv][1])
     const cmds = getCmds.call(this)
     const flags = revalue(getFlags.call(this), it => it.join(', '))
     const flagWidth = Math.max(...Object.values(flags).map(stringWidth))
-    const optWidth = Math.max(...Object.keys(flags).map(stringWidth))
+    // const optWidth = Math.max(...Object.keys(flags).map(stringWidth))
     const flagstrs = Object.entries(flags).map(([opt, flagstr]) => {
         return [flagstr.padEnd(flagWidth, ' '), `set ${opt} option`].join('   ')
     }).flat()
@@ -125,6 +142,6 @@ function getCmds() {
         .filter(
             name => name.indexOf(CmdPfx) ===  0 && isFunction(this[name])
         ).map(
-            name => name.substr(CmdPfx.length)
+            name => name.substring(CmdPfx.length)
         )
 }

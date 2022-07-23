@@ -22,18 +22,16 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-// Dependency requires
-const {types: {castToArray, typeOf}} = require('@quale/core')
-const {Logger, merging : {merge}} = require('@quale/term')
-const globby = require('globby')
+import {castToArray} from '@quale/core/types.js'
+import Logger from '@quale/term/logger.js'
+import {merge} from '@quale/term/merging.js'
+import globby from 'globby'
 
-// Node requires
-const {EventEmitter} = require('events')
-const fs = require('fs')
-const path = require('path')
+import {EventEmitter} from 'events'
+import fs from 'fs'
+import path from 'path'
 
-// Package requires
-const {checkArg} = require('./util.js')
+import {checkArg} from './util.js'
 
 // Default options
 const Defaults = {
@@ -43,7 +41,7 @@ const Defaults = {
     logging : {},
 }
 
-class Base extends EventEmitter {
+export default class Base extends EventEmitter {
 
     /**
      * @constructor
@@ -151,5 +149,3 @@ class Base extends EventEmitter {
         this.opts.logging.logLevel = this.logger.logLevel
     }
 }
-
-module.exports = Base

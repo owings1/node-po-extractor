@@ -22,12 +22,13 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const {expect} = require('chai')
-const {ger} = require('../helpers/util.js')
+import {expect} from 'chai'
+import {ger} from '../helpers/util.js'
+
+import * as Util from '../../src/util.js'
 
 describe('Util', () => {
 
-    const Util = require('../../src/util.js')
 
     describe('#checkArg', () => {
 
