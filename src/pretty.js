@@ -51,7 +51,8 @@ Defaults.chalks = {
         num    : chalk.cyan,
         colon  : chalk,
         paren  : chalk.grey,
-        msg    : chalk.italic.hex('#ffa500'),
+        // msg    : chalk.italic.hex('#ffa500'),
+        msg    : chalk.italic.keyword('orange'),
     },
 }
 
