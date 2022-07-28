@@ -66,9 +66,7 @@ import Index from './index.js'
 import {ArgumentError} from './errors.js'
 import {arrayUnique, checkArg} from './util.js'
 
-
 const traverse = Traverse.default
-
 
 // Default options.
 const Defaults = {
@@ -102,7 +100,7 @@ export default class Extractor extends Base {
      *
      * @throws {ArgumentError}
      *
-     * @param {object} (optional) The options
+     * @param {object} opts The options
      */
     constructor(opts) {
         super(Defaults, opts)
@@ -191,6 +189,8 @@ export default class Extractor extends Base {
         return this
     }
 }
+
+export {Extractor}
 
 /**
  * @private

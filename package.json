@@ -1,6 +1,6 @@
 {
   "name": "@quale/dev-i18n",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "extraction and merging gettext-po i18n files",
   "type": "module",
   "exports": {
@@ -10,13 +10,11 @@
     "./pretty.js": "./src/pretty.js"
   },
   "scripts": {
-    "test": "nyc --reporter=text-summary mocha test/specs/** && nyc report --reporter=lcov",
+    "test": "mocha test/specs/**",
     "preversion": "npm run clean && npm i && npm t",
     "version": "echo no version script to run",
     "postversion": "git push && git push --tags",
     "clean": "npm run cl && rm -rf node_modules",
-    "cl": "rm -rf .nyc_output coverage",
-    "co": "open coverage/lcov-report/index.html",
     "examples": "scripts/examples.js run",
     "examples:build": "scripts/examples.js build",
     "errors": "scripts/errors.js info",
@@ -60,7 +58,7 @@
   "dependencies": {
     "@babel/core": "^7.14.8",
     "@babel/traverse": "^7.14.8",
-    "@quale/core": "^1.0.0",
+    "@quale/core": "^1.1.0",
     "@quale/term": "^1.0.0",
     "fs-extra": "^10.0.0",
     "gettext-parser": "^4.0.4",

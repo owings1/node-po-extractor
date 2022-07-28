@@ -56,9 +56,6 @@
  */
 import * as diff from 'diff'
 import {chalk} from '@quale/term/colors.js'
-// const {arrays: {append}} = require('@quale/core')
-// const {colors: {Chalk}} = require('@quale/term')
-// const diff = require('diff')
 
 const noBlanks = line => typeof line !== 'undefined' && line !== null
 
@@ -174,5 +171,3 @@ export default class Diffs {
         })
     }
 }
-
-// module.exports = Diffs

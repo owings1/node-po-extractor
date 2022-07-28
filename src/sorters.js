@@ -29,7 +29,7 @@ import {castToArray, isFunction} from '@quale/core/types.js'
  * is a reference to the original sorter. The `desc` property calls `asc` with
  * inverted arguments.
  */
-function _extendsortersers(sorters) {
+function extendSorters(sorters) {
     sorters.filter(isFunction).forEach(sorter => {
         sorter.asc = sorter
         sorter.desc = function (a, b) {
@@ -50,7 +50,7 @@ export default sorters
 /**
  * @param {string}
  * @param {string}
- * @return {integer}
+ * @return {Number}
  */
 sorters.lc = function sortLc(a, b) {
     return a.toLowerCase().localeCompare(b.toLowerCase())
@@ -59,7 +59,7 @@ sorters.lc = function sortLc(a, b) {
 /**
  * @param {number}
  * @param {number}
- * @return {integer}
+ * @return {Number}
  */
 sorters.num = function sortNum(a, b) {
     return a - b || 0
@@ -68,7 +68,7 @@ sorters.num = function sortNum(a, b) {
 /**
  * @param {string}
  * @param {string}
- * @return {integer}
+ * @return {Number}
  */
 sorters.ref = function sortRef(a, b) {
     const [afile, aline] = a.split(':')
@@ -86,7 +86,7 @@ sorters.ref = function sortRef(a, b) {
 /**
  * @param {object}
  * @param {object}
- * @return {integer}
+ * @return {Number}
  */
 sorters.keyLc = function sortByKey(a, b) {
     return sorters.lc(a.key, b.key)
@@ -95,7 +95,7 @@ sorters.keyLc = function sortByKey(a, b) {
 /**
  * @param {object}
  * @param {object}
- * @return {integer}
+ * @return {Number}
  */
 sorters.loc = function sortLocs(a, b) {
     return (
@@ -109,7 +109,7 @@ sorters.loc = function sortLocs(a, b) {
 /**
  * @param {array|string}
  * @param {array|string}
- * @return {integer}
+ * @return {Number}
  */
 sorters.refs = function sortRefs(a, b) {
     a = castToArray(a)
@@ -139,7 +139,7 @@ sorters.refs = function sortRefs(a, b) {
     return 0
 }
 
-_extendsortersers(Object.values(sorters))
+extendSorters(Object.values(sorters))
 
 /**
  * Tranlation sorters
@@ -149,7 +149,7 @@ sorters.tran = {}
 /**
  * @param {object}
  * @param {object}
- * @return {integer}
+ * @return {Number}
  */
 sorters.tran.msgid = function sortByMsgid(a, b) {
     return sorters.lc(a.msgid, b.msgid)
@@ -158,7 +158,7 @@ sorters.tran.msgid = function sortByMsgid(a, b) {
 /**
  * @param {object}
  * @param {object}
- * @return {integer}
+ * @return {Number}
  */
 sorters.tran.file = function sortByFile(a, b) {
     const aref = (a.comments || {}).reference
@@ -180,7 +180,7 @@ sorters.tran.file = function sortByFile(a, b) {
 /**
  * @param {object}
  * @param {object}
- * @return {integer}
+ * @return {Number}
  */
 sorters.tran.source = function sortInSourceOrder(a, b) {
     const asrc = this.sourceOrderHash[a.msgid]
@@ -197,4 +197,4 @@ sorters.tran.source = function sortInSourceOrder(a, b) {
     return asrc - bsrc
 }
 
-_extendsortersers(Object.values(sorters.tran))
+extendSorters(Object.values(sorters.tran))

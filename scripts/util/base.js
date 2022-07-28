@@ -7,27 +7,9 @@ import {revalue, update} from '@quale/core/objects.js'
 import {stringWidth} from '@quale/core/strings.js'
 import {isFunction} from '@quale/core/types.js'
 
-
-
-// const {
-//     objects: {revalue, update},
-//     strings: {stringWidth},
-//     types  : {isFunction},
-// } = require('@quale/core')
-// const {Logger} = require('@quale/term')
-
-// const path = {basename} = require('path')
-// const {ScriptError} = require('../../src/errors.js')
-
-
-
-
-
-
 const SyArgv = Symbol('argv')
 const CmdPfx = 'cmd_'
 
-// module.exports = class BaseScript {
 export default class BaseScript {
 
     constructor(isMain, argv) {

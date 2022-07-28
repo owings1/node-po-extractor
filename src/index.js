@@ -31,9 +31,6 @@ import {MessageConflictError} from './errors.js'
  */
 export default class Index  {
 
-    /**
-     * @constructor
-     */
     constructor() {
         this.clear()
     }
@@ -41,7 +38,7 @@ export default class Index  {
     /**
      * Clear the index.
      *
-     * @return {self}
+     * @return {Index} self
      */
     clear() {
         this.idx = {}
@@ -53,11 +50,11 @@ export default class Index  {
      *
      * @throws {MessageConflictError} When a different non-empty comment already
      *         exists for the context/key/reference combination.
-     * @param {string} The message context (msgctxt)
-     * @param {string} The message key (msgid)
-     * @param {string} The reference (path/to/file:line)
-     * @param {string} The extracted comment
-     * @return {self}
+     * @param {String} The message context (msgctxt)
+     * @param {String} The message key (msgid)
+     * @param {String} The reference (path/to/file:line)
+     * @param {String} The extracted comment
+     * @return {Index} self
      */
     add(ctx, key, ref, cmt) {
         const chk = lget(this.idx, [ctx, key, ref, 'cmt'])
@@ -73,7 +70,7 @@ export default class Index  {
     /**
      * List all contexts.
      *
-     * @return {array} The contexts
+     * @return {String[]}
      */
     contexts() {
         return Object.keys(this.idx)
@@ -82,8 +79,8 @@ export default class Index  {
     /**
      * List all keys (msgid) for a context.
      *
-     * @param {string}
-     * @return {array} The contexts
+     * @param {String} ctx
+     * @return {String[]}
      */
     keys(ctx) {
         return Object.keys(this.idx[ctx] || {})
@@ -93,9 +90,9 @@ export default class Index  {
      * List all references (path/to/file:line) for a message, ordered
      * file, line.
      *
-     * @param {string}
-     * @param {string}
-     * @return {array} The references
+     * @param {String} ctx
+     * @param {String} key
+     * @return {String[]} The references
      */
     refs(ctx, key) {
         return Object.keys(this.idx[ctx][key]).sort(Sort.ref)
@@ -105,9 +102,9 @@ export default class Index  {
      * List all comments (path/to/file:line) for a message, ordered
      * their reference (file, line).
      *
-     * @param {string}
-     * @param {string}
-     * @return {array} The comments
+     * @param {String} ctx
+     * @param {String} key
+     * @return {String[]} The comments
      */
     comments(ctx, key) {
         return this.refs(ctx, key).map(ref => this.comment(ctx, key, ref)).filter(Boolean)
@@ -116,10 +113,10 @@ export default class Index  {
     /**
      * Get the extracted comment for a message reference.
      *
-     * @param {string}
-     * @param {string}
-     * @param {string}
-     * @return {string}
+     * @param {String}
+     * @param {String}
+     * @param {String}
+     * @return {String}
      */
     comment(ctx, key, ref) {
         return this.idx[ctx][key][ref].cmt

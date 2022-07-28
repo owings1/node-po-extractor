@@ -29,7 +29,6 @@ import {castToArray, isFunction, isObject} from '@quale/core/types.js'
 import {merge} from '@quale/term/merging.js'
 import fse from 'fs-extra'
 import {po as parser} from 'gettext-parser'
-// const parser = require('gettext-parser').po
 
 import fs from 'fs'
 import path from 'path'
@@ -74,7 +73,7 @@ export default class Merger extends Base {
     /**
      * @constructor
      * @throws {ArgumentError}
-     * @param {object} (optional) The options
+     * @param {object} opts The options
      */
     constructor(opts) {
         super(Defaults, opts)
@@ -99,8 +98,8 @@ export default class Merger extends Base {
      *
      * @emits `beforeSave`
      *
-     * @param {string} The po file
-     * @param {array} The messages
+     * @param {string} file The po file
+     * @param {array} messages The messages
      * @return {object} The merge info result
      */
     mergePo(file, messages) {
@@ -135,8 +134,8 @@ export default class Merger extends Base {
      *
      * @emits `beforeSave`
      *
-     * @param {array|string} Po file path(s)/glob(s)
-     * @param {array} The messages
+     * @param {array|string} globs Po file path(s)/glob(s)
+     * @param {array} messages The messages
      * @return {array} The merge info results
      */
     mergePos(globs, messages) {
@@ -163,9 +162,9 @@ export default class Merger extends Base {
      *
      * @emits `beforeSave`
      *
-     * @param {string} The source po file
-     * @param {string} The destination file
-     * @param {array} The messages
+     * @param {string} sourceFile The source po file
+     * @param {string} destFile The destination file
+     * @param {array} messages The messages
      * @return {object} The merge info result
      */
     mergePoTo(sourceFile, destFile, messages) {
@@ -197,9 +196,9 @@ export default class Merger extends Base {
      *
      * @emits `beforeSave`
      *
-     * @param {array|string} Po file path(s)/glob(s)
-     * @param {string} The destination directory
-     * @param {array} The messages
+     * @param {array|string} sourceGlob Po file path(s)/glob(s)
+     * @param {string} destDir The destination directory
+     * @param {array} messages The messages
      * @return {array} The merge info results
      */
     mergePosTo(sourceGlob, destDir, messages) {
@@ -238,8 +237,8 @@ export default class Merger extends Base {
      *
      * @throws {TypeError}
      *
-     * @param {string} The source po file
-     * @param {array} The messages
+     * @param {string} sourceFile The source po file
+     * @param {array} messages The messages
      * @return {object} The merge info result
      */
     getMergePoResult(sourceFile, messages) {
@@ -264,8 +263,8 @@ export default class Merger extends Base {
      *
      * @throws {TypeError}
      *
-     * @param {object} The tranlations
-     * @param {object} The source order hash from the original po file
+     * @param {object} translations The tranlations
+     * @param {object} sourceOrderHash The source order hash from the original po file
      * @return {object} A new object with key insert order
      */
     sortedTranslations(translations, sourceOrderHash) {
@@ -295,8 +294,8 @@ export default class Merger extends Base {
  * @emits `changed`
  * @emits `missing`
  *
- * @param {object}
- * @param {object}
+ * @param {object} po
+ * @param {object} messages
  * @return {object}
  */
 function mergePoResult(po, messages) {
@@ -453,7 +452,7 @@ function mergePoResult(po, messages) {
 /**
  * @private
  * @throws {ArgumentError}
- * @param {object}
+ * @param {object} sourceOrderHash
  * @return {function}
  */
 function getSorter(sourceOrderHash) {
@@ -469,8 +468,8 @@ function getSorter(sourceOrderHash) {
 }
 
 /**
- * @param {array}
- * @param {object}
+ * @param {array} cmts
+ * @param {object} tran
  * @return {object}
  */
 function addExtractedComment(cmts, tran) {
@@ -491,9 +490,9 @@ function addExtractedComment(cmts, tran) {
     return change
 }
 /**
- * @param {array}
- * @param {object}
- * @param {object}
+ * @param {array} refs
+ * @param {object} tran
+ * @param {object} opts
  * @return {object|boolean}
  */
 function addReference(refs, tran, opts) {
@@ -515,8 +514,8 @@ function addReference(refs, tran, opts) {
 }
 
 /**
- * @param {array}
- * @param {object}
+ * @param {array} refs
+ * @param {object} opts
  * @return {array}
  */
 function buildReference(refs, opts) {
@@ -541,8 +540,8 @@ function buildReference(refs, opts) {
 }
 
 /**
- * @param {array}
- * @param {object}
+ * @param {array} built
+ * @param {object} opts
  * @return {array}
  */
 function buildReferenceLines(built, opts) {
@@ -569,8 +568,7 @@ function buildReferenceLines(built, opts) {
 
 /**
  * @throws {ArgumentError}
- * @param {*}
- * @return {undefined}
+ * @param {*} value
  */
 function checkSortOption(value) {
     checkArg(
@@ -587,8 +585,7 @@ function checkSortOption(value) {
  * @throws {ExecResultError}
  * @throws {UnsavedChangesError}
  *
- * @param {string} The file path
- * @return {undefined}
+ * @param {string} file The file path
  */
 function checkGitDirty(file) {
     const log = this.logger
@@ -638,9 +635,8 @@ function checkGitDirty(file) {
  * @throws {TypeError}
  * @throws {UnsavedChangesError}
  *
- * @param {string} The file path
- * @param {buffer} The content to write
- * @return {undefined}
+ * @param {string} file The file path
+ * @param {buffer} content The content to write
  */
 function writeFile(file, content) {
     checkArg(

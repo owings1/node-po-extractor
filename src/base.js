@@ -44,10 +44,9 @@ const Defaults = {
 export default class Base extends EventEmitter {
 
     /**
-     * @constructor
      * @throws {TypeError}
      *
-     * @param {...object} (optional) The options, merged, in order.
+     * @param {...object} opts The options, merged, in order.
      */
     constructor(...opts) {
         super()
@@ -61,8 +60,8 @@ export default class Base extends EventEmitter {
      *
      * @throws {TypeError}
      *
-     * @param {string} The file path
-     * @return {buffer} The file content
+     * @param {String} file The file path
+     * @return {Buffer} The file content
      */
     readFile(file) {
         checkArg(file, 'file', 'string')
@@ -71,12 +70,12 @@ export default class Base extends EventEmitter {
 
     /**
      * Search for files matching the globs.
-     &
-     * @throws {ArgumentError}
-     * @throws {TyoeError}
      *
-     * @param {string|array} The globs
-     * @return {array} The matching files
+     * @throws {ArgumentError}
+     * @throws {TypeError}
+     *
+     * @param {String|String[]} globs The globs
+     * @return {String[]} The matching files
      */
     glob(globs) {
         checkArg(
@@ -92,8 +91,8 @@ export default class Base extends EventEmitter {
     /**
      * Get the path relative to the baseDir, if set.
      *
-     * @param {string}
-     * @return {string}
+     * @param {String} file
+     * @return {String}
      */
     relPath(file) {
         const {baseDir} = this.opts
@@ -106,8 +105,8 @@ export default class Base extends EventEmitter {
     /**
      * Resolve a path to the baseDir, if set.
      *
-     * @param {string}
-     * @return {string}
+     * @param {String} file
+     * @return {String}
      */
     resolve(file) {
         const {baseDir} = this.opts
@@ -122,9 +121,8 @@ export default class Base extends EventEmitter {
      *
      * @throws {TypeError}
      *
-     * @param {integer} The verbose level of the message
-     * @param {...*} The message(s)
-     * @return {undefined}
+     * @param {Number} vlevel The verbose level of the message
+     * @param {...*} args The message(s)
      */
     verbose(vlevel, ...args) {
         checkArg(vlevel, 'vlevel', 'number')
@@ -135,15 +133,12 @@ export default class Base extends EventEmitter {
     }
 
     /**
-     * Getter for logLevel (integer).
+     * @type {Number}
      */
     get logLevel() {
         return this.logger.logLevel
     }
 
-    /**
-     * Setter for logLevel (integer or string).
-     */
     set logLevel(level) {
         this.logger.logLevel = level
         this.opts.logging.logLevel = this.logger.logLevel

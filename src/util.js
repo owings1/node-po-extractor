@@ -58,7 +58,6 @@ export function checkArg(...args) {
             `Argument (${name}) must be type ${types.join(' or ')}, got '${argType}'.`
         )
     }
-    // return Util
 }
 
 export function checkMax(value, max) {
