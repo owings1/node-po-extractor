@@ -1,6 +1,6 @@
 {
   "name": "@quale/dev-i18n",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "extraction and merging gettext-po i18n files",
   "type": "module",
   "exports": {
@@ -58,8 +58,8 @@
   "dependencies": {
     "@babel/core": "^7.14.8",
     "@babel/traverse": "^7.14.8",
-    "@quale/core": "^1.1.0",
-    "@quale/term": "^1.0.0",
+    "@quale/core": "^1.2.0",
+    "@quale/term": "^1.1.0",
     "fs-extra": "^10.0.0",
     "gettext-parser": "^4.0.4",
     "globby": "^10.0.2"
